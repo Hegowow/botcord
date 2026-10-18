@@ -1,9 +1,3 @@
-/*
- * Vencord, a Discord client mod
- * Copyright (c) 2026 Vendicated and contributors
- * SPDX-License-Identifier: GPL-3.0-or-later
- */
-
 import Dexie, { type EntityTable,type Transaction } from "dexie";
 
 import type {
@@ -12,19 +6,19 @@ import type {
 } from "./proto";
 
 export interface Channel {
-    channelId: string; // primary key
-    botId: string; // indexed
-    data: Record<string, any>; // json
+    channelId: string;
+    botId: string;
+    data: Record<string, any>;
 }
 
 export interface PreloadedUserSettingsEntry {
-    botId: string; // primary key
-    data: PreloadedUserSettings; // protobuf
+    botId: string;
+    data: PreloadedUserSettings;
 }
 
 export interface FrecencyUserSettingsEntry {
-    botId: string; // primary key
-    data: FrecencyUserSettings; // protobuf
+    botId: string;
+    data: FrecencyUserSettings;
 }
 
 export type DexieExtended = Dexie & {

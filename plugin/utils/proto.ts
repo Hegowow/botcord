@@ -1,9 +1,3 @@
-/*
- * Vencord, a Discord client mod
- * Copyright (c) 2025 Vendicated and contributors
- * SPDX-License-Identifier: GPL-3.0-or-later
- */
-
 import { FrecencyUserSettings, PreloadedUserSettings } from "discord-protos";
 
 export { FrecencyUserSettings, PreloadedUserSettings };
@@ -145,7 +139,7 @@ export const DefaultFrecencyUserSettings = FrecencyUserSettings.create({
     stickerFrecency: {
         stickers: {},
     },
-    favoriteEmojis: { emojis: ["sparkles"] }, // Sparkle => Hanabi (Honkai Star Rail Character) ~\(≧▽≦)/~
+    favoriteEmojis: { emojis: ["sparkles"] },
     emojiFrecency: {
         emojis: {},
     },

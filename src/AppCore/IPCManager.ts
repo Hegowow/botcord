@@ -1,5 +1,3 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import { APIApplication, ApplicationFlags, GatewayIntentBits } from "discord-api-types/v10";
 import { app, BrowserWindow, dialog } from "electron";
 import { ApplicationFlagsBitField, IntentsBitField } from "src/AppUtils/DiscordBitField";
@@ -33,7 +31,6 @@ export function setupIPCEvents (mainApp: DiscordBotClient) {
         })
         .on(IPCEvent.Focus, (event, frameName) => {
             const win = getWindow(frameName);
-            // this.win.focus();
             win.show();
             win.setSkipTaskbar(false);
         })
@@ -101,12 +98,9 @@ export function setupIPCEvents (mainApp: DiscordBotClient) {
                         Math.ceil(
                             ((
                                 data as APIApplication & {
-                                    // New field, it reflects the number of guilds that have actually added this application as a bot profile
-                                    // @undocumented
                                     bot_approximate_guild_count?: number;
                                 }
                             ).bot_approximate_guild_count ??
-                                // Old field, it reflects the number of guilds that have added this application as an intergration
                                 data.approximate_guild_count ??
                                 0) / Number(mainApp.config.config.guilds_per_shard),
                         ) || 1,
@@ -141,7 +135,6 @@ export function setupIPCEvents (mainApp: DiscordBotClient) {
         .on(IPCEvent.GetDefaultUserPatch, event => {
             event.returnValue = Constants.UserDefaultPatch;
         });
-    // Config Editor
     mainApp.ipcMain.handle(IPCEvent.MonacoEditorGetConfig, event => {
         return mainApp.config.toString();
     });
@@ -149,7 +142,6 @@ export function setupIPCEvents (mainApp: DiscordBotClient) {
         return mainApp.config.monacoAutoComplete();
     });
     mainApp.ipcMain.handle(IPCEvent.MonacoEditorSaveConfig, (event, config) => {
-        // Validate and save the config
         try {
             mainApp.config.loadConfig(config);
             mainApp.config.save();

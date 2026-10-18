@@ -1,14 +1,3 @@
-/*
- * Vencord, a Discord client mod
- * Copyright (c) 2025 Vendicated and contributors
- * SPDX-License-Identifier: GPL-3.0-or-later
- */
-
-/*
-! Todo: These are the things I need to fix every time I update Vencord and Discord.
-Ref: https://github.com/aiko-chan-ai/DiscordBotClient/issues/183
-*/
-
 import { ChatBarButton, ChatBarButtonFactory } from "@api/ChatButtons";
 import { ApplicationCommandInputType, ApplicationCommandOptionType, findOption, sendBotMessage } from "@api/Commands";
 import { definePluginSettings } from "@api/Settings";
@@ -45,7 +34,6 @@ import {
 
 import AuthBoxMultiTokenLogin, { multiTokenState } from "./components/AuthBoxMultiTokenLogin";
 import AuthBoxTokenLogin from "./components/AuthBoxTokenLogin";
-// Components
 import { IconEmbedSvg } from "./icon.svg";
 import type { EmojiGuildData, Group, List, MemberPatch, OpItem, Ops } from "./typing/index.d.ts";
 import { buildDiscordAPIErrorMessage, originalSessionStorage, RegExToken } from "./utils/common";
@@ -64,66 +52,17 @@ const getDraft = (channelId: string) => DraftStore.getDraft(channelId, DraftType
 
 const BotClientLogger = new Logger("BotClient", "#f5bde6");
 
-// PermissionStore.computePermissions is not the same function and doesn't work here
 const computePermissions: (options: {
     user?: { id: string; } | string | null;
     context?: Guild | Channel | null;
     overwrites?: Channel["permissionOverwrites"] | null;
-    roles?: undefined; // !?
-    checkElevated?: boolean /* = true */;
-    excludeGuildPermissions?: boolean /* = false */;
+    roles?: undefined;
+    checkElevated?: boolean ;
+    excludeGuildPermissions?: boolean ;
 }) => bigint = findByCodeLazy(".getCurrentUser()", ".computeLurkerPermissionsAllowList()");
-/*
-function M(e) {
-    var t, n, r;
-    let i, {
-        user: a,
-        context: o,
-        overwrites: s,
-        roles: l,
-        checkElevated: u = !0,
-        excludeGuildPermissions: p = !1
-    } = e;
-    if (null == a) return T;
-    let g = "string" == typeof a ? a : a.id,
-        y = N;
-    if (o instanceof f.Sf) {
-        if (o.isScheduledForDeletion()) return T;
-        if (f.Ec.has(o.type)) {
-            let e = h.Z.getChannel(o.parent_id);
-            if (null == e || e.isScheduledForDeletion()) return T;
-            let t = g === (null == (n = b.default.getCurrentUser()) ? void 0 : n.id) && d.Z.hasJoined(o.id);
-            return j(o, M({
-                user: a,
-                context: e,
-                overwrites: s,
-                roles: l,
-                checkElevated: u,
-                excludeGuildPermissions: p
-            }), t)
-        }
-        y = null != (r = o.computeLurkerPermissionsAllowList()) ? r : y, s = null != s ? I({}, o.permissionOverwrites, s) : o.permissionOverwrites;
-        let e = o.getGuildId();
-        i = null != e ? E.Z.getGuild(e) : null
-    } else s = null != s ? s : {}, i = o;
-    if (null == i) return T;
-    if (!(g === (null == (t = b.default.getCurrentUser()) ? void 0 : t.id) && c.Z.isViewingRoles(i.id)) && (0, _.eM)(i, g)) return D(S, i, g, u);
-    let O = m.ZP.getMember(i.id, g);
-    return x({
-        userId: g,
-        member: O,
-        guild: i,
-        overwrites: s,
-        roles: l,
-        checkElevated: u,
-        excludeGuildPermissions: p,
-        lurkerPermissionsMask: y
-    })
-}*/
 
 let currentMessageHandler: ((event: MessageEvent) => Promise<void>) | null = null;
 
-// Member-list updaters, bound to the plugin in start() (flux handlers run with `this` = the flux object, not the plugin, so they call these instead)
 let funcUpdateGuildMembersList: ((location: string, data?: any) => void) | null = null;
 let updateGuildMembersListDirect: ((location: string, data?: any) => void) | null = null;
 
@@ -141,7 +80,6 @@ const requestOpenMessageEditorWindow = (
     window.BotClientNative.requestOpenMessageEditorWindow();
     const onWindowMessage = async (event: MessageEvent) => {
         if (event.source === window && event.data === "forward-editor-port") {
-            // Handshake done: the window listener fired once to receive the port, so detach it to avoid leaking a listener per editor window
             window.removeEventListener("message", onWindowMessage);
             if (currentMessageHandler === onWindowMessage) currentMessageHandler = null;
             const port = event.ports[0];
@@ -200,16 +138,12 @@ const requestOpenMessageEditorWindow = (
                             },
                         })
                             .then(() => {
-                                // Clear draft after sending message
-                                // Clear reply
                                 FluxDispatcher.dispatch({ type: "DELETE_PENDING_REPLY", channelId });
-                                // Clear Draft message
                                 FluxDispatcher.dispatch({
                                     type: "DRAFT_CLEAR",
                                     channelId,
                                     draftType: DraftType.ChannelMessage,
                                 });
-                                // Clear attachments
                                 FluxDispatcher.dispatch({
                                     type: "UPLOAD_ATTACHMENT_CLEAR_ALL_FILES",
                                     channelId,
@@ -226,7 +160,6 @@ const requestOpenMessageEditorWindow = (
                         RestAPI.patch({
                             url: Constants.Endpoints.MESSAGE(channelId, messageId),
                             body: {
-                                // Clear content and embeds if they are not included in the edited message to prevent duplication since Editor always sends the full message object instead of just the diff
                                 content: null,
                                 embeds: [],
                                 ...message,
@@ -246,10 +179,7 @@ const requestOpenMessageEditorWindow = (
             };
             const currentUser = UserStore.getCurrentUser();
             port.start();
-            // Initial data for Editor
-            // Emojis
             const emojis: EmojiGuildData[] = [];
-            // Application Emojis
             if (window.applicationEmojis && Array.isArray(window.applicationEmojis)) {
                 emojis.push({
                     guild_id: null,
@@ -288,13 +218,13 @@ const requestOpenMessageEditorWindow = (
                     token: "<not actually used>",
                 },
                 mode: {
-                    type: mode, // create | edit
-                    messageType: hasComponentV2 ? "components-v2" : "standard", // standard | components-v2
+                    type: mode,
+                    messageType: hasComponentV2 ? "components-v2" : "standard",
                 },
                 messages: [
                     {
                         data: initMessage,
-                        _id: crypto.randomUUID(), // Just a random ID for Editor to identify the message, not related to actual Discord message ID
+                        _id: crypto.randomUUID(),
                     },
                 ],
                 emojis,
@@ -312,7 +242,6 @@ const requestOpenMessageEditorWindow = (
 const CreateAdvancedMessageEditor: ChatBarButtonFactory = prop => {
     const handle = () => {
         const channelId = prop.channel.id;
-        // New message
         if (channelId.length < 17) {
             return Toasts.show({
                 id: Toasts.genId(),
@@ -333,7 +262,6 @@ const CreateAdvancedMessageEditor: ChatBarButtonFactory = prop => {
                 ),
             });
         }
-        // idk how to pass attachments to Editor
         const reply = PendingReplyStore.getPendingReply(channelId);
         const content = getDraft(channelId) || undefined;
         requestOpenMessageEditorWindow(channelId, null, "create", false, {
@@ -353,7 +281,6 @@ const EditAdvancedMessageEditor = msg => {
         showToast("Fetching message...", Toasts.Type.MESSAGE, {
             position: Toasts.Position.TOP,
         });
-        // Fetch raw msg from discord
         const msgRaw = await RestAPI.get({
             url: Constants.Endpoints.MESSAGE(msg.channel_id, msg.id),
         });
@@ -435,7 +362,6 @@ const settings = definePluginSettings({
                     Toasts.Type.SUCCESS,
                 );
             } else {
-                // Get current voice channel bitrate
                 const channelId = VoiceStateStore.getVoiceStateForUser(GetApplicationId.getId())?.channelId;
                 if (!channelId) return;
                 const channel = ChannelStore.getChannel(channelId);
@@ -468,8 +394,8 @@ export default definePlugin({
     description: "Patch the current version of Discord to allow the use of bot accounts",
     authors: [
         {
-            name: "Elysia",
-            id: 721746046543331449n,
+            name: "kahodev",
+            id: 0n,
         },
     ],
     enabledByDefault: true,
@@ -477,217 +403,15 @@ export default definePlugin({
     settings,
     required: true,
     patches: [
-        // AuthBox (Token)
         {
-            // ???
             find: '"username webauthn"',
             replacement: [
                 {
-                    // #region Example code for reference
-                    /** Function: renderDefaultForm(e){...} -> function iv(e) { ... } ???
-                    function iv(e) {
-                        let t, {invite: n, guildTemplate: i, giftCode: l, authBoxClassName: s, disableAutofocusOnDefaultForm: r, login: c, password: h, errors: g, loginSource: x, dismissedChooseAccount: f, setDismissedChooseAccount: p, conditionalMediationAbortController: A, onLoginChange: E, onPasswordChange: _, handleLogin: j, handleForgotPassword: N, handleGotoRegister: v} = e, C = (0,
-                        m.bG)([eE.A], () => eE.A.getCountryCode()), I = (0,
-                        m.bG)([eQ.default], () => eQ.default.getLoginStatus()), S = (0,
-                        m.bG)([ig.A], () => ig.A.getHasLoggedInAccounts()), y = o.useCallback(e => {
-                            T.default.track(b.HAw.LOGIN_SUCCESSFUL, {
-                                source: b.mdB.QR_CODE,
-                                login_source: x,
-                                gift_code_sku_id: l?.skuId ?? null,
-                                is_new_user: !1,
-                                login_method: "remote_auth",
-                                login_instance_id: e ?? null
-                            })
-                        }
-                        , [x, l]), {handoff_token: R} = (0,
-                        d.parse)(window.location.search), O = u.Fr && u.KY && null != R, L = null == g.email && null != g.password, D = o.useRef(null), P = o.useRef(null), w = (0,
-                        n7.A)(g);
-                        o.useEffect( () => {
-                            let e = e => null != g[e];
-                            null != w && w !== g && (e("password") ? P.current?.focus() : (e("email") || e("login")) && D.current?.focus())
-                        }
-                        , [g, D, P, w]),
-                        t = null != n ? (0,
-                        a.jsx)("div", {
-                            className: Q.S3,
-                            children: (0,
-                            a.jsx)(n6.A, {
-                                invite: n
-                            })
-                        }) : null != l ? (0,
-                        a.jsx)(n1, {
-                            giftCode: l
-                        }) : (0,
-                        a.jsxs)("div", {
-                            className: n8.wx,
-                            children: [(0,
-                            a.jsx)(k.hE, {
-                                className: Q.QB,
-                                children: z.intl.string(z.t["7fNJgA"])
-                            }, "title"), !1 === (0,
-                            tY.isAndroidWeb)() ? (0,
-                            a.jsx)(k.tK, {
-                                children: z.intl.string(z.t.euS7r4)
-                            }, "subtitle") : null]
-                        });
-                        let G = (0,
-                        a.jsxs)("div", {
-                            className: n8.Eh,
-                            children: [S && f && (0,
-                            a.jsx)("div", {
-                                className: n8.AX,
-                                children: (0,
-                                a.jsx)(V.$, {
-                                    onClick: () => p(!1),
-                                    variant: "secondary",
-                                    text: z.intl.string(z.t["1MrpWO"]),
-                                    icon: nl.n
-                                })
-                            }), t, (0,
-                            a.jsx)(n4.F, {
-                                children: (0,
-                                a.jsxs)(k.eB, {
-                                    className: Q.QX,
-                                    children: [(0, <- Here => Replace this line (children: [) with children:[$self.renderTokenLogin()],children_:[
-                                    a.jsx)(e_.A, {
-                                        alpha2: C.alpha2,
-                                        countryCode: C.code.split(" ")[0],
-                                        className: Q.SX,
-                                        label: z.intl.string(z.t.tUjnxr),
-                                        error: iN("login", g) ?? iN("email", g),
-                                        onChange: E,
-                                        setRef: D,
-                                        autoCapitalize: "none",
-                                        autoComplete: "username webauthn",
-                                        autoCorrect: "off",
-                                        spellCheck: "false",
-                                        value: c,
-                                        autoFocus: !L && !O && !r,
-                                        required: !0
-                                    }), (0,
-                                    a.jsx)(k.pd, {
-                                        label: z.intl.string(z.t["CIGa+7"]),
-                                        error: iN("password", g),
-                                        onChange: _,
-                                        name: "password",
-                                        type: "password",
-                                        setRef: P,
-                                        autoComplete: "current-password",
-                                        spellCheck: "false",
-                                        autoFocus: L && !O && !r,
-                                        value: h,
-                                        required: !0
-                                    }), (0,
-                                    a.jsx)("div", {
-                                        className: B()(Q.SX, Q.a5),
-                                        children: (0,
-                                        a.jsx)(ec.Q, {
-                                            text: z.intl.string(z.t.wWIufs),
-                                            textVariant: "text-sm/normal",
-                                            onClick: () => {
-                                                null != D.current && D.current.focus(),
-                                                N()
-                                            }
-                                        })
-                                    }), (0,
-                                    a.jsx)("div", {
-                                        className: Q.QB,
-                                        children: (0,
-                                        a.jsx)(V.$, {
-                                            text: z.intl.string(z.t.dKhVQN),
-                                            fullWidth: !0,
-                                            type: "submit",
-                                            loading: I === b.aUe.LOGGING_IN
-                                        })
-                                    }), (0,
-                                    a.jsxs)("div", {
-                                        className: Q.a5,
-                                        children: [(0,
-                                        a.jsx)("span", {
-                                            className: n8.Qt,
-                                            children: z.intl.string(z.t.tmE73r)
-                                        }), (0,
-                                        a.jsx)("span", {
-                                            className: n8.Z8,
-                                            children: (0,
-                                            a.jsx)(ec.Q, {
-                                                text: z.intl.string(z.t.pV8xeR),
-                                                textVariant: "text-sm/normal",
-                                                onClick: v
-                                            })
-                                        })]
-                                    })]
-                                })
-                            })]
-                        });
-                        return null != n && n.state === b.elq.RESOLVING ? (0,
-                        a.jsx)(i_, {
-                            authBoxClassName: s,
-                            country: C,
-                            login: c,
-                            password: h,
-                            onLoginChange: E,
-                            onPasswordChange: _,
-                            loginRef: D,
-                            passwordRef: P
-                        }) : null != i ? i.state === ij.QB.RESOLVING ? (0,
-                        a.jsx)(i_, {
-                            authBoxClassName: s,
-                            country: C,
-                            login: c,
-                            password: h,
-                            onLoginChange: E,
-                            onPasswordChange: _,
-                            loginRef: D,
-                            passwordRef: P
-                        }) : (0,
-                        a.jsx)(ie, {
-                            onSubmit: j,
-                            tag: "form",
-                            className: B()(s, n8.Sy),
-                            children: () => [(0,
-                            a.jsx)(it.A, {
-                                guildTemplate: i
-                            }, "template"), (0,
-                            a.jsx)(o.Fragment, {
-                                children: G
-                            }, "form-wrapper")]
-                        }) : S && !f ? (0,
-                        a.jsx)(iE, {
-                            onDismiss: () => p(!0)
-                        }) : (0,
-                        a.jsxs)("div", {
-                            children: [(0,
-                            a.jsx)(k.Ay, {
-                                onSubmit: j,
-                                tag: "form",
-                                className: B()(s, {
-                                    [n8.M0]: O
-                                }),
-                                expanded: !0,
-                                children: (0,
-                                a.jsxs)(eR.B, {
-                                    direction: "horizontal",
-                                    align: "center",
-                                    gap: 64,
-                                    children: [G, (0,
-                                    a.jsx)(n9.A, { <- QR Login component
-                                        onAuthenticateSuccess: y,
-                                        conditionalMediationAbortController: A
-                                    })]
-                                })
-                            }), O && (0,
-                            a.jsx)(im, {})]
-                        })
-                    }
-                    */
-                    // #endregion
                     match: /(?<=\{className:\i\.\i,)children:\[(?=\(0,\i\.\i\)\(\i\.\i,\{alpha2:)/,
                     replace: "children:[$self.renderTokenLogin()],children_:[",
                 },
             ],
         },
-        // Disable QR login
         {
             find: "https://discord.com/ra/",
             replacement: {
@@ -695,32 +419,26 @@ export default definePlugin({
                 replace: "$1return null;",
             },
         },
-        // AuthBox2 (Switch Account)
         {
             find: 'componentWillUnmount(){window.removeEventListener("keydown",this.handleTabOrEnter),this.state.conditionalMediationAbortController.abort()}',
             replacement: [
                 {
-                    // {className:F.Eh,children:(0,n.jsxs)(b.eB,{children:[(0,n.jsx)(A.A,{alpha2:t.alpha2
                     match: /children:\[(?=\(0,[\w.]+\)\([\w.]+,{alpha2:)/,
                     replace: function (str, ...args) {
                         return "children:[$self.renderTokenLoginMultiAccount()],children_:[";
                     },
                 },
                 {
-                    // Button "Continue"
                     match: "onClick:this.handleLogin,",
                     replace: "onClick:$self.validateTokenAndLogin,onClick_:this.handleLogin,",
                 },
                 {
-                    // gap:32,children:[this.renderDefaultForm(),(0,r.jsx)(w.A,{onAuthenticateSuccess:this.handleQRAuthSuccess,conditionalMediationAbortController:this.state.conditionalMediationAbortController,isMultiAccount:!0})]}
-                    // Remove QR login component, keep only renderDefaultForm()
                     match: /(this\.renderDefaultForm\(\)),[^\]]*?isMultiAccount:!0\}\)(?=\])/,
                     replace: "$1",
                 },
             ],
         },
         {
-            // Bot account caused the error
             find: "hasFetchedCredentials(){",
             replacement: [
                 {
@@ -737,26 +455,22 @@ export default definePlugin({
             find: "unranked_game_entries.map",
             replacement: [
                 {
-                    // let e=n?c?.unranked_game_entries.map(e=>e.content):c?.entries.map(e=>e.content);
                     match: /(\w+\?\w+\?\.unranked_game_entries\.map\(\w+=>\w+\.content\):\w+\?\.entries\.map\(\w+=>\w+\.content\))/,
                     replace: "[]",
                 },
             ],
         },
         {
-            // Remove/Patch unused bot ws opcode
             find: "voiceServerPing(){",
             replacement: [
                 {
                     match: /(updateGuildSubscriptions\(\w+\){)/,
                     replace: "$& return $self.updateGuildSubscriptionsPatch(arguments[0]);",
                 },
-                // Leave / Switch VoiceChannel
                 {
                     match: /(voiceStateUpdate\()(\w+)(\){)/,
                     replace: "$& $2 = $self.voiceStateUpdatePatch($2, this.send.bind(this));",
                 },
-                // Disable Events:
                 {
                     match: /callConnect\(((\w+,?)+)?\){/,
                     replace: "$& return;",
@@ -788,50 +502,34 @@ export default definePlugin({
             ],
         },
         {
-            // Patch opcode 2 (identify) and events
             find: "window.GLOBAL_ENV.GATEWAY_ENDPOINT;",
             replacement: [
                 {
-                    // Patch Close code
-                    // _handleClose(e,t,n){
                     match: /(_handleClose\()(\w+)(,)(\w+)(,)(\w+)(\){)/,
-                    //      $1               $2  $3  $4  $5  $6    $7
-                    // e = event, t = closeCode, n = reason
                     replace: "$& $4=$self.handleClosePatch($2, $4, $6);",
                 },
-                // Handle Events
                 {
-                    // _handleDispatch(e,t,n){
-                    // e = data, t = eventName, n = N ???
                     match: /(_handleDispatch\()(\w+)(,)(\w+)(,)(\w+)(\){)/,
-                    //      $1                  $2  $3  $4  $5  $6    $7
                     replace:
                         "$& $2=$self.handleDispatchPatch($2,$4,$6,this.dispatcher.receiveDispatch.bind(this.dispatcher),$self);if(!$2)return;",
                 },
-                // _doIdentify
                 {
                     match: /(this\.token=)(\w+)(,)(\w+)(\.verbose\("\[IDENTIFY\]"\);)/,
-                    //       $1            $2   $3  $4       $5
                     replace:
                         '$& $2=$2.replace(/bot/gi,"").trim();this.token=$2;const botInfo = await $self.doIdentifyFirstPatch($2, $self, this._handleClose.bind(this));if(!botInfo)return;',
                 },
-                // Sharding
                 {
                     match: /(token:\w+)(,capabilities:)/,
                     replace:
                         "$1,intents:botInfo.intents,shard:[parseInt($self.sessionStorage.getItem('currentShard')||0),botInfo.allShards]$2",
                 },
-                // QoS Heartbeat: bots only accept a null `qos`, any object closes with 4002
                 {
-                    // _sendHeartbeat(){let e=this._consumeQOSPayload();
                     match: /(_sendHeartbeat\(\)\{let )(\w+)(=this\._consumeQOSPayload\(\);)/,
-                    //       $1                        $2   $3
                     replace: "$& $2=null;",
                 },
             ],
         },
         {
-            // Bot account caused the error
             find: "users_size:JSON.stringify",
             replacement: [
                 {
@@ -845,7 +543,6 @@ export default definePlugin({
             ],
         },
         {
-            // Bot account caused the error
             find: "notificationSettings:{",
             replacement: [
                 {
@@ -853,9 +550,6 @@ export default definePlugin({
                     replace: "$1 0},",
                 },
                 {
-                    // If user account is already logged in, proceed to log out
-                    // if(e.user.bot){ (old)
-                    // e.user.bot?X({type:"LOGOUT"}):E.A.ready.measure... (new)
                     match: /(\w+)\.user\.bot\?/,
                     replace: "!$1.user.bot?",
                 },
@@ -870,9 +564,6 @@ export default definePlugin({
                 },
             ],
         },
-        // Max attachment size 20MB = 20971520
-        // 2024: https://discord.com/developers/docs/change-log#default-file-upload-limit-change
-        // 2026: https://docs.discord.com/developers/change-log#default-file-upload-limit-increase
         {
             find: 'PREMIUM_TENURE_1_MONTH="premium_tenure_1_month_v2"',
             replacement: [
@@ -882,7 +573,6 @@ export default definePlugin({
                 },
             ],
         },
-        // Deny stickers to be sent everywhere - From FakeNitro plugin
         {
             find: "canUseCustomStickersEverywhere:",
             replacement: {
@@ -890,13 +580,11 @@ export default definePlugin({
                 replace: "return false;",
             },
         },
-        // Try handle Private Channel
         {
             find: "async openPrivateChannel(",
             replacement: [
                 {
                     match: /(async openPrivateChannel)(\(\w+\){)/,
-                    //       $1                          $2
                     replace: "openPrivateChannel(e){return $self.openPrivateChannelPatch(e, this, $self);},$1_$2",
                 },
                 {
@@ -906,7 +594,6 @@ export default definePlugin({
                 },
             ],
         },
-        // Fix unread message
         {
             find: "}getOldestUnreadMessageId(",
             replacement: [
@@ -920,7 +607,6 @@ export default definePlugin({
                 },
             ],
         },
-        // Emoji
         {
             find: "}searchWithoutFetchingLatest(",
             replacement: [
@@ -931,19 +617,15 @@ export default definePlugin({
                 },
             ],
         },
-        // Support link
         {
             find: '"support.discord.com"',
             replacement: [
                 {
                     match: '"support.discord.com"',
-                    replace: '"github.com/aiko-chan-ai/DiscordBotClient/discussions#"',
+                    replace: '"github.com/Hegowow/botcord/issues#"',
                 },
             ],
         },
-        // === Apply Patches from Vesktop ===
-        // #region Vesktop Patches
-        // src > renderer > patches > windowsTitleBar.tsx
         {
             find: ".USE_OSX_NATIVE_TRAFFIC_LIGHTS",
             replacement: [
@@ -953,7 +635,6 @@ export default definePlugin({
                 },
             ],
         },
-        // Visual Refresh
         {
             find: '"refresh-title-bar-small"',
             replacement: [
@@ -967,7 +648,6 @@ export default definePlugin({
                 },
             ],
         },
-        // src > renderer > patches > windowMethods.tsx
         {
             find: ",setSystemTrayApplications",
             replacement: [
@@ -976,15 +656,11 @@ export default definePlugin({
                     replace: "BotClientNative.$1",
                 },
                 {
-                    // TODO: Fix eslint rule
                     match: /(focus(\(\i\)){).{0,150}?\.focus\(\i,\i\)/,
                     replace: "$1BotClientNative.focus$2",
                 },
-                // Todo: Hardware Acceleration
             ],
         },
-        // src > renderer > patches > devtoolsFixes.ts
-        // Discord Web blocks the devtools key-bind on mac specifically, disable that
         {
             find: '"mod+alt+i"',
             replacement: {
@@ -993,9 +669,6 @@ export default definePlugin({
             },
         },
         {
-            // Custom patch
-            // Instead of trying to precisely identify which events should “hide” the token in localStorage, I chose to disable this feature entirely.
-            // This client is intended for power users anyway - no one would leave their token exposed while opening devtools, right?
             find: ".setDevtoolsCallbacks(",
             replacement: [
                 {
@@ -1004,7 +677,6 @@ export default definePlugin({
                 },
             ],
         },
-        // src > renderer > patches > enableNotificationsByDefault.ts
         {
             find: '"NotificationSettingsStore',
             replacement: {
@@ -1012,7 +684,6 @@ export default definePlugin({
                 replace: "$&||true",
             },
         },
-        // src > renderer > patches > hideDownloadAppsButton.ts
         {
             find: '"app-download-button"',
             replacement: {
@@ -1020,7 +691,6 @@ export default definePlugin({
                 replace: "return null;return",
             },
         },
-        // src > renderer > patches > taskBarFlash.ts
         {
             find: ".flashFrame(!0)",
             replacement: {
@@ -1028,9 +698,6 @@ export default definePlugin({
                 replace: "BotClientNative.flashFrame(true)",
             },
         },
-        // #endregion
-        // === End Vesktop Patches ===
-        // High bitrate
         {
             find: '{type:"SET_CHANNEL_BITRATE",bitrate:',
             replacement: [
@@ -1070,7 +737,7 @@ export default definePlugin({
                         content: `🚫 Must be greater than or equal to **2** and less than or equal to **100**.\n**${amount}** is an invalid number`,
                     });
                 } else {
-                    const oldId = SnowflakeUtil.generate(Date.now() - 1209600000); // 14 days ago
+                    const oldId = SnowflakeUtil.generate(Date.now() - 1209600000);
                     const { body } = await RestAPI.get({
                         url: Constants.Endpoints.MESSAGES(ctx.channel.id) + `?limit=${amount}`,
                     });
@@ -1266,52 +933,9 @@ export default definePlugin({
                 funcUpdateGuildMembersList?.("GuildRoleDelete", data);
             }
         },
-        /*
-        USER_SETTINGS_PROTO_UPDATE: async function (data) {
-            const botId = GetApplicationId.getId();
-            if (data.partial) {
-                BotClientLogger.debug(
-                    "FluxDispatcher#USER_SETTINGS_PROTO_UPDATE",
-                    data,
-                );
-                // Preloaded User Settings
-                if (data.settings.type === 1) {
-                    const preloaded = await db.getPreloadedUserSettings(botId);
-                    // Try update
-                    Object.keys(data.settings.proto).forEach(key => {
-                        preloaded[key] = data.settings.proto[key];
-                    });
-                    // Save to IndexedDB
-                    await db.SetPreloadedUserSettings(botId, preloaded);
-                }
-                // Frecency User Settings
-                if (data.settings.type === 2) {
-                    const frecency = await db.getFrecencyUserSettings(botId);
-                    // Try update
-                    Object.keys(data.settings.proto).forEach(key => {
-                        frecency[key] = data.settings.proto[key];
-                    });
-                    // Save to IndexedDB
-                    await db.SetFrecencyUserSettings(botId, frecency);
-                }
-            }
-        }
-        */
     },
     dynamicPatchModules() {
-        // Patch Relationships modules
         const RelationshipsModule = findByProps("fetchRelationships", "sendRequest", "removeFriend");
-        /*
-        Object.keys(RelationshipsModule).forEach(a => {
-            RelationshipsModule[a] = function () {
-                showToast(
-                    `${window.BotClientNative.getBotClientName()} cannot use Relationships Module`,
-                    Toasts.Type.FAILURE,
-                );
-                return Promise.reject(`${window.BotClientNative.getBotClientName()} cannot use Relationships Module`);
-            };
-        });
-        */
         const methodsToBlock = [
             "sendRequest",
             "addRelationship",
@@ -1342,7 +966,6 @@ export default definePlugin({
                 };
             }
         }
-        // Patch getCurrentUser in UserStore
         const UserStorePatch = findStore("UserStore") as UserStoreType;
         UserStorePatch.getCurrentUser = function () {
             const user = UserStorePatch.getUsers()[GetApplicationId.getId()];
@@ -1355,19 +978,18 @@ export default definePlugin({
                 premiumSubscriptionType: 4,
                 premiumSource: 1,
             };
-            user.purchasedFlags = 3; // https://docs.discord.food/resources/user#purchased-flags
-            user.premiumType = 2; // https://docs.discord.food/resources/user#premium-type
-            user.premiumUsageFlags = 4; // https://docs.discord.food/resources/user#purchased-flags
+            user.purchasedFlags = 3;
+            user.premiumType = 2;
+            user.premiumUsageFlags = 4;
             // @ts-expect-error ignore
             user.premium = true;
             user.mfaEnabled = true;
             user.verified = true;
             user.nsfwAllowed = true;
-            user.phone = "33550336"; // https://x.com/StarRailVerse1/status/1939186090222490046
+            user.phone = "33550336";
             user.email = user.id + "@cyrene.moe";
             return user;
         };
-        // Invite Module
         const InviteModule = findByProps("acceptInvite", "resolveInvite");
         InviteModule.acceptInvite = async function (e) {
             if (parseInt(originalSessionStorage.getItem("allShards") || "0") > 1) {
@@ -1411,7 +1033,6 @@ export default definePlugin({
                 return Promise.reject(`${window.BotClientNative.getBotClientName()} cannot join guilds`);
             }
         };
-        // GuildTemplateModule
         const GuildTemplateModule = findByProps("loadTemplatesForGuild", "resolveGuildTemplate");
         GuildTemplateModule.loadTemplatesForGuild = function (e) {
             return Promise.reject(`${window.BotClientNative.getBotClientName()} cannot use Guild Templates`);
@@ -1426,7 +1047,6 @@ export default definePlugin({
         render: EditAdvancedMessageEditor,
     },
     start() {
-        // Patch Modules
         this.dynamicPatchModules();
 
         updateGuildMembersListDirect = this.updateGuildMembersList.bind(this);
@@ -1438,7 +1058,6 @@ export default definePlugin({
         this.applyGlobalPatches();
     },
     stop() {
-        // Editor window may have been opened without completing the port handshake, leaving a dangling "message" listener and an open port
         if (currentMessageHandler) {
             window.removeEventListener("message", currentMessageHandler);
             currentMessageHandler = null;
@@ -1449,7 +1068,6 @@ export default definePlugin({
         }
         this.removeGlobalPatches();
     },
-    // Utils
     throttle<T extends (...args: any[]) => void>(func: T, getDelay: () => number): (...args: Parameters<T>) => void {
         let lastCall = 0;
         let timeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -1474,7 +1092,6 @@ export default definePlugin({
             }
         };
     },
-    // Guild Member List
     calculateMemberListId(channel: Channel, everyonePermHasViewChannel: bigint) {
         const VIEW = PermissionsBits.VIEW_CHANNEL;
         const perms: string[] = [];
@@ -1500,7 +1117,6 @@ export default definePlugin({
         const ops: OpItem[] = [];
         const groups: Group[] = [];
         const allLists = new Map<string, List>();
-        // Online members
         for (const member of onlineMembers) {
             const idList = member.hoistRoleId || "online";
             let list = allLists.get(idList);
@@ -1517,13 +1133,10 @@ export default definePlugin({
             list.group.count++;
             list.members.push(member);
         }
-        // Sorting roles by position
         const sortedLists = [...allLists.values()].sort(
             (a, b) =>
-                // group.id = role.id
                 (guildRoles[b.group.id]?.position ?? 0) - (guildRoles[a.group.id]?.position ?? 0),
         );
-        // Sorting members by nickname
         for (const list of sortedLists) {
             ops.push({ group: list.group });
 
@@ -1533,7 +1146,6 @@ export default definePlugin({
 
             groups.push(list.group);
         }
-        // Offline members
         if (offlineMembers.length) {
             const offlineGroup = { id: "offline", count: offlineMembers.length };
             ops.push({ group: offlineGroup });
@@ -1545,7 +1157,6 @@ export default definePlugin({
             groups,
         };
     },
-    // Permission cache to avoid recomputing for every member on each event
     _permissionCache: new Map<string, boolean>(),
     _cachedGuildId: null as string | null,
     _cachedChannelId: null as string | null,
@@ -1581,49 +1192,39 @@ export default definePlugin({
             BotClientLogger.error("botClient#updateGuildMembersList()", "Invalid Channel", channel);
             return false;
         }
-        // Convert guild roles to object
         const guildRolesArray = GuildRoleStore.getSortedRoles(guild.id);
         const guildRoles: Record<string, Role> = {};
         guildRolesArray.map(r => (guildRoles[r.id] = r));
-        // MemberListId
         const memberListId = this.calculateMemberListId(
             channel,
             (guildRoles[guild.id]?.permissions ?? 0n) & PermissionsBits.VIEW_CHANNEL,
         );
-        // Invalidate permission cache when guild/channel context changes
         if (guild.id !== this._cachedGuildId || channel.id !== this._cachedChannelId) {
             this._permissionCache.clear();
             this._cachedGuildId = guild.id;
             this._cachedChannelId = channel.id;
         }
 
-        // Invalidate cache based on event type
         switch (location) {
             case "GuildRoleUpdate":
             case "GuildRoleCreate":
             case "GuildRoleDelete":
-                // Role changes can affect any member's permissions
                 this._permissionCache.clear();
                 break;
             case "GuildMemberUpdate":
-                // Only the updated member's permissions may have changed
                 if (anyLog?.user?.id) {
                     this._invalidatePermCacheForMember(channel.id, anyLog.user.id);
                 }
                 break;
             case "GuildMemberAdd":
-                // New member — no cache entry yet, nothing to invalidate
                 break;
             case "GuildMemberRemove":
-                // Remove stale cache entry
                 if (anyLog?.user?.id) {
                     this._invalidatePermCacheForMember(channel.id, anyLog.user.id);
                 }
                 break;
-            // PresenceUpdates, ChannelPreload: permissions unchanged, skip invalidation
         }
 
-        // GuildMembers Patch
         const allMembers = GuildMemberStore.getMembers(guild.id);
         const memberCount = allMembers.length;
         const membersOffline: MemberPatch[] = [];
@@ -1686,7 +1287,6 @@ export default definePlugin({
 
         return true;
     },
-    // React Component Login
     renderTokenLogin() {
         return (
             <ErrorBoundary noop>
@@ -1738,7 +1338,6 @@ export default definePlugin({
         this.console.debug("Fetching Application Emojis");
         return new Promise(resolve => {
             RestAPI.get({
-                // TODO: Use the correct endpoint for fetching emojis
                 url: "/users/@me/emojis",
             })
                 .then(d => {
@@ -1748,25 +1347,21 @@ export default definePlugin({
                 .catch(() => resolve([]));
         });
     },
-    // Debug
     get console() {
         return BotClientLogger;
     },
-    // Dexie
     get db() {
         return db;
     },
     get sessionStorage() {
         return originalSessionStorage;
     },
-    // Patches
     updateGuildSubscriptionsPatch,
     voiceStateUpdatePatch,
     handleClosePatch,
     handleDispatchPatch,
     doIdentifyFirstPatch,
     openPrivateChannelPatch,
-    // Global patches
     applyGlobalPatches() {
         Object.defineProperty(BigInt.prototype, "includes", {
             value(searchValue, position = 0) {

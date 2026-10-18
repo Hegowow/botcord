@@ -1,5 +1,3 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 export class BadgesBasedUserFlags extends null {
     static Staff = {
         id: "staff",
@@ -81,9 +79,6 @@ export class BadgesNitro extends BadgesBasedUserFlags {
         icon: "2ba85e8026a8614b640c2837bcdfe21b",
         link: "https://discord.com/settings/premium",
     };
-    /**
-     * @param {1|2|3|4|5|6|7|8|9} level
-     */
     static GuildBooster = (level: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9) => {
         const RawLevel = [
             {
@@ -143,9 +138,6 @@ export class BadgesNitro extends BadgesBasedUserFlags {
         ];
         return RawLevel[level - 1];
     };
-    /**
-     * @param {1|3|6|12|24|36|60|72} month
-     */
     static PremiumTenure = (month: 1 | 3 | 6 | 12 | 24 | 36 | 60 | 72) => {
         const RawLevel = [
             {
@@ -199,9 +191,6 @@ export class BadgesNitro extends BadgesBasedUserFlags {
         ];
         return RawLevel.find(_ => _.id === `premium_tenure_${month}_month`);
     };
-    /**
-     * @param {1|3|6|12|24|36|60|72} month
-     */
     static PremiumTenureV2 = (month: 1 | 3 | 6 | 12 | 24 | 36 | 60 | 72) => {
         const RawLevel = [
             {
@@ -290,7 +279,6 @@ export class BadgesBasedUserDataAndExtends extends BadgesNitro {
         description: "Level 67 Reached",
         icon: "ca105ad9cfc8580c765101d17bbb2323",
     };
-    // Todo: add more badges here
     static Gifting = {
         id: "gifting",
         description: "Gifting Champion",

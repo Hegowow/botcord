@@ -1,5 +1,3 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import crypto from "node:crypto";
 
 import { Router } from "express";

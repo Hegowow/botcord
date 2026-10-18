@@ -1,5 +1,3 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import { contextBridge, ipcRenderer } from "electron";
 
 import { IPCEvent } from "./IPCEvents";

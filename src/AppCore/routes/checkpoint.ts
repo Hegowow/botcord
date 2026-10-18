@@ -1,5 +1,3 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import { Router } from "express";
 
 const app = Router({ mergeParams: true });
@@ -36,13 +34,6 @@ app.get("/", (req, res) => {
                 {
                     name: "🙃",
                 },
-                /*
-                {
-                    id: "emoji_id",
-                    name: "emoji_name",
-                    animated: false,
-                },
-                */
             ],
         },
         voice: {
@@ -55,15 +46,10 @@ app.get("/", (req, res) => {
         },
         guilds: {
             num_guilds_joined: 1,
-            // guilds: { num_messages_sent: number, num_voice_minutes: number, guild: APIGuild }[];
             guilds: [],
         },
-        // sidekick: { user: APIUser, num_messages_sent: number, num_voice_minutes: number }
         sidekick: null,
-        // The discord friend you spent the most time with this year
-        // users: { user: APIUser }[];
         users: [],
-        // Games
         applications: {
             total_games_played: 1,
             applications: [

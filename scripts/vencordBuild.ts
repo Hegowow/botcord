@@ -1,9 +1,7 @@
-/* Copyright Elysia © 2025 */
-
 import { spawn } from "child_process";
 import path from "path";
 import process from "process";
-import { existsSync, renameSync, rmSync, readFileSync, writeFileSync } from "fs";
+import { cpSync, existsSync, mkdirSync, renameSync, rmSync, readFileSync, writeFileSync } from "fs";
 
 function runCommand(cmd: string, args: string[], opts: { cwd?: string } = {}): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -24,6 +22,15 @@ function runCommand(cmd: string, args: string[], opts: { cwd?: string } = {}): P
             resolve();
         });
     });
+}
+
+function syncPlugin() {
+    const root = process.cwd();
+    const userPluginDir = path.join(root, "Vencord", "src", "userplugins", "botClient");
+    rmSync(userPluginDir, { recursive: true, force: true });
+    mkdirSync(path.dirname(userPluginDir), { recursive: true });
+    cpSync(path.join(root, "plugin"), userPluginDir, { recursive: true });
+    console.log("➡️  Botcord plugin synced into Vencord.");
 }
 
 async function buildVencord() {
@@ -56,7 +63,6 @@ function copyAndPatch() {
     rmSync(path.resolve(root, "Vencord", "dist"), { recursive: true });
     console.info("Moved the newly built Vencord Extension folder to", finalFolder);
 
-    // Patch Vencord.js
     const vencordPath = path.resolve(finalFolder, "dist", "Vencord.js");
     const vencordContent = readFileSync(vencordPath, "utf-8");
 
@@ -77,6 +83,7 @@ function copyAndPatch() {
 
 async function main() {
     try {
+        syncPlugin();
         await buildVencord();
         copyAndPatch();
         console.log("🎉 All done.");

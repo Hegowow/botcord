@@ -1,5 +1,3 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import { APIApplication, APIGuildMember, APIUser } from "discord-api-types/v10";
 import { net } from "electron";
 import { Request, Router } from "express";
@@ -15,11 +13,9 @@ app.get("/", async (req: Request<{ id: string }>, res) => {
     const isCurrentUser = req.params.id === botId;
     if (guild_id) {
         if (isCurrentUser) {
-            // ??? https://canary.discord.com/api/v9/users/@me/guilds/${guild_id}/member
             const body: Record<string, unknown> = {
                 avatar_decoration_id: null,
             };
-            // ??? monkey patching
             guild_member = await net
                 .fetch(`https://canary.discord.com/api/v10/guilds/${guild_id}/members/@me`, {
                     headers: {
@@ -45,7 +41,6 @@ app.get("/", async (req: Request<{ id: string }>, res) => {
     }
     let bio: string | null = null;
     if (isCurrentUser) {
-        // Using bio from applications/@me
         try {
             const applicationData = await net
                 .fetch("https://canary.discord.com/api/v9/applications/@me", {

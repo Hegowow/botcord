@@ -1,10 +1,9 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import { APIGuildMember, APIUser } from "discord-api-types/v10";
 import { net } from "electron";
 import express from "express";
 import multer from "multer";
 import selfsigned from "selfsigned";
+import Branding from "src/AppCore/Branding";
 import GlobalConfig from "src/AppCore/Config";
 import Constants from "src/AppCore/Constants";
 
@@ -18,7 +17,7 @@ export default class Util {
         guildId: string | null = null,
         injectUserBio: string | null = null,
     ) {
-        const fakeBio = "<a:shiggy:1162436090775470160> Based on the cutest Discord client mod :3";
+        const fakeBio = Branding.ProfileBio;
         const flags = new UserFlagsBitField(userData.flags);
         const badges: object[] = [];
         flags.toArray().map(element => {
@@ -47,17 +46,6 @@ export default class Util {
                 );
             }
         }
-        /*
-		// https://github.com/discord/discord-api-docs/issues/6623
-		if (userData.premium_type > 0) {
-			badges.push(UserBadges.PREMIUM_DEFAULT);
-			if (userData.premium_type == 2) {
-				badges.push(UserBadges.GUILD_BOOSTER_LEVEL(9));
-			}
-			// Ruby
-			badges.push(UserBadges.PREMIUM_TENURE(60));
-		}
-		*/
         if (!injectUserBio && GlobalConfig.config.generate_fake_profile) {
             injectUserBio = fakeBio;
         }
@@ -90,7 +78,6 @@ export default class Util {
             mutual_guilds: [],
             premium_since: GlobalConfig.config.generate_fake_profile ? "2016-12-22T00:00:00.000000+00:00" : null,
             premium_guild_since: GlobalConfig.config.generate_fake_profile ? "2016-12-22T00:00:00.000000+00:00" : null,
-            // Force enable Nitro features (Bot)
             premium_type: userData.bot ? 2 : userData.premium_type,
             profile_themes_experiment_bucket: 4,
             user: userData,
@@ -113,10 +100,9 @@ export default class Util {
         if (!token) return null;
         token = token.replace(/^(Bot|Bearer)\s*/i, "");
         const parts = token.split(".");
-        if (parts.length < 2) return null; // Token must have at least 2 parts (id.secret)
+        if (parts.length < 2) return null;
         try {
             const decoded = Buffer.from(parts[0], "base64").toString();
-            // Discord user/bot IDs are numeric (snowflakes)
             if (!decoded || !/^\d+$/.test(decoded)) return null;
             return decoded;
         } catch {
@@ -131,7 +117,6 @@ export default class Util {
         callback: (rq: express.Request<any, any, any, any>, rs: express.Response) => unknown,
     ) {
         let data = "";
-        // check content-type
         if (req.headers["content-type"] !== "application/json") {
             return multer().any()(req, res, function (err) {
                 if (err) {
@@ -156,36 +141,16 @@ export default class Util {
             callback(req, res);
         });
     }
-    /**
-     * Create a ISO Date string
-     * Ex: 2024-12-25T14:14:53.033000+00:00
-     * @param {number} addYear
-     * @returns
-     */
     static makeISODate (addYear = 0) {
         const date = new Date();
         date.setFullYear(date.getFullYear() + addYear);
         return date.toISOString().replace("Z", "000+00:00");
     }
-    /**
-     * Create a ISO Date string without milliseconds
-     * Ex: 2024-12-25T14:18:15+00:00
-     * @param {number} addYear
-     * @returns
-     */
     static makeISODateWithoutMilliseconds (addYear = 0) {
         const date = new Date();
         date.setFullYear(date.getFullYear() + addYear);
         return date.toISOString().replace(/\.\d+Z/, "+00:00");
     }
-    /**
-     * Compares two version strings and determines if `versionB` is newer than `versionA`.
-     * Supports version strings in the format `major.minor.patch` with an optional prefix 'v'.
-     *
-     * @param versionA - The current version (e.g., "v1.2.3" or "1.2.3").
-     * @param versionB - The new version to check (e.g., "v1.3.0" or "1.3.0").
-     * @returns `true` if `versionB` is newer than `versionA`, otherwise `false`.
-     */
     static isNewerVersion (versionA: string, versionB: string) {
         const normalizeVersion = (version: string) => version.replace(/^v/, "");
 
@@ -211,7 +176,6 @@ export default class Util {
             return res.status(503).send({ message: "chrome://dino" });
         }
 
-        // 1. Create Electron request
         const electronReq = net.request({
             method: req.method as string,
             url: `https://canary.discord.com${req.originalUrl}`,
@@ -219,7 +183,6 @@ export default class Util {
             useSessionCookies: true,
         });
 
-        // 2. Copy headers (Express -> Electron)
         const skipHeaders = [
             "host",
             "connection",
@@ -236,16 +199,14 @@ export default class Util {
                     const headerValue = Array.isArray(value) ? value.join(", ") : value;
                     electronReq.setHeader(key, headerValue);
                 } catch {
-                    //
+                    return;
                 }
             }
         });
 
-        // 3. Origin & Referer
         electronReq.setHeader("Origin", "https://canary.discord.com");
         electronReq.setHeader("Referer", "https://canary.discord.com/");
 
-        // 4. Electron -> Express
         electronReq.on("response", electronRes => {
             res.status(electronRes.statusCode);
             const skipResHeaders = ["content-encoding", "content-length", "transfer-encoding"];
@@ -254,7 +215,7 @@ export default class Util {
                     try {
                         res.setHeader(key, value);
                     } catch {
-                        //
+                        return;
                     }
                 }
             });
@@ -272,7 +233,6 @@ export default class Util {
             if (!res.headersSent) res.status(500).send({ error: err.message });
         });
 
-        // 5. Pipe request body (Express -> Electron)
         if (["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             req.pipe(electronReq as any);
@@ -294,11 +254,11 @@ export default class Util {
                     name: "subjectAltName",
                     altNames: [
                         {
-                            type: 2, // DNS
+                            type: 2,
                             value: "localhost",
                         },
                         {
-                            type: 7, // IP
+                            type: 7,
                             ip: "127.0.0.1",
                         },
                     ],

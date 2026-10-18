@@ -1,5 +1,3 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import { Router } from "express";
 import { GetSystemMessage } from "src/AppUtils/SystemMessages";
 

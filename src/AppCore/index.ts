@@ -1,5 +1,3 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import { randomUUID } from "crypto";
 import {
     app,
@@ -24,6 +22,7 @@ import EventEmitter from "events";
 import path from "path";
 
 import server from "./APIServer";
+import Branding from "./Branding";
 import GlobalConfig from "./Config";
 import Constants from "./Constants";
 import { IPCEvent } from "./IPCEvents";
@@ -42,7 +41,6 @@ export class DiscordBotClient extends EventEmitter {
     config = GlobalConfig;
     ipcMain = ipcMain;
 
-    // Beta Features
     messageEditorPort!: number;
 
     constructor () {
@@ -78,7 +76,7 @@ export class DiscordBotClient extends EventEmitter {
                 },
             },
             {
-                label: "Github Repository",
+                label: "Dépôt GitHub",
                 type: "normal",
                 click: () => shell.openExternal(`https://github.com/${Constants.GithubRepo}`),
             },
@@ -167,20 +165,13 @@ export class DiscordBotClient extends EventEmitter {
         app.setAppUserModelId(Constants.AppID);
         const enabledFeatures = new Set(app.commandLine.getSwitchValue("enable-features").split(","));
         const disabledFeatures = new Set(app.commandLine.getSwitchValue("disable-features").split(","));
-        // Allow Localhost SSL
         app.commandLine.appendSwitch("allow-insecure-localhost", "true");
         app.commandLine.appendSwitch("ignore-certificate-errors");
         app.commandLine.appendSwitch("host-rules", `MAP ${Constants.CustomDiscordDomain} 127.0.0.1:${this.port}`);
-        // Vesktop
-        // Disable renderer backgrounding to prevent the app from unloading when in the background
-        // https://github.com/electron/electron/issues/2822
-        // https://github.com/GoogleChrome/chrome-launcher/blob/5a27dd574d47a75fec0fb50f7b774ebf8a9791ba/docs/chrome-flags-for-tools.md#task-throttling
         app.commandLine.appendSwitch("disable-renderer-backgrounding");
         app.commandLine.appendSwitch("disable-background-timer-throttling");
         app.commandLine.appendSwitch("disable-backgrounding-occluded-windows");
-        // Disable proxy
         app.commandLine.appendSwitch("no-proxy-server");
-        // Enable & Disable Chromium Features
         Constants.enableFeatures.forEach(feature => {
             enabledFeatures.add(feature);
         });
@@ -198,13 +189,11 @@ export class DiscordBotClient extends EventEmitter {
             app.commandLine.appendSwitch("disable-features", disabledFeaturesArray.join(","));
             this.logger.log("Disabled Chromium features:", disabledFeaturesArray.join(", "));
         }
-        // App Event
         app.on("window-all-closed", () => {
             if (process.platform !== "darwin") this.quit();
         });
 
         app.on("before-quit", event => {
-            // MacOS: Set flag to really quit app
             this.#shouldQuitApp = true;
             this.logger.info("App closing...");
             this.logger.info("=".repeat(50));
@@ -217,10 +206,8 @@ export class DiscordBotClient extends EventEmitter {
             }
         });
 
-        // Patch UserAgent (Switch Plan B SDP > Unified Plan)
         app.userAgentFallback = app.userAgentFallback.replace(/Electron\/[\d.]+/, "");
 
-        // Handle second instance
         const gotTheLock = app.requestSingleInstanceLock();
         if (!gotTheLock) {
             this.logger.debug("Second Instance detected. Quit app...");
@@ -242,8 +229,7 @@ export class DiscordBotClient extends EventEmitter {
             ]);
             app.whenReady().then(async () => {
                 this.logger.info("Creating session...");
-                this.customSession = session.fromPartition("persist:elysia_dbc");
-                // Enable DoH (Cloudflare)
+                this.customSession = session.fromPartition(`persist:${Branding.SystemUserName}_${Branding.GithubRepoName}`);
                 app.configureHostResolver({
                     enableBuiltInResolver: true,
                     secureDnsMode: "secure",
@@ -263,7 +249,6 @@ export class DiscordBotClient extends EventEmitter {
             });
         }
 
-        // Create context menu
         contextMenu({
             showLearnSpelling: false,
             showSearchWithGoogle: false,
@@ -285,36 +270,16 @@ export class DiscordBotClient extends EventEmitter {
         }
     }
     async sessionPatch () {
-        // Disable stripe.com
         this.session.webRequest.onBeforeRequest(
             {
                 urls: ["https://*.stripe.com/*"],
             },
             (details, callback) => {
-                // Cancel all requests to stripe.com
                 callback({
                     cancel: true,
                 });
             },
         );
-        /*
-        // Rule 1: Remove all CSP headers
-        this.session.webRequest.onHeadersReceived(
-            { urls: ["<all_urls>"], types: ["mainFrame", "subFrame"] },
-            (details, callback) => {
-                if (!details.responseHeaders) {
-                    return callback({ responseHeaders: details.responseHeaders });
-                }
-                // Remove both CSP and CSP-report-only
-                delete details.responseHeaders["content-security-policy"];
-                delete details.responseHeaders["Content-Security-Policy"];
-                delete details.responseHeaders["content-security-policy-report-only"];
-                delete details.responseHeaders["Content-Security-Policy-Report-Only"];
-                callback({ responseHeaders: details.responseHeaders });
-            },
-        );
-        */
-        // Rule 2: Force CSS content-type on GitHub raw URLs
         this.session.webRequest.onHeadersReceived(
             {
                 urls: ["https://raw.githubusercontent.com/*"],
@@ -326,13 +291,11 @@ export class DiscordBotClient extends EventEmitter {
                 }
                 const url = new URL(details.url);
                 if (url.pathname.endsWith(".css")) {
-                    // Override Content-Type
                     details.responseHeaders["content-type"] = ["text/css"];
                 }
                 callback({ responseHeaders: details.responseHeaders });
             },
         );
-        // Load Vencord-Web Extension
         const extension = await this.session.extensions.loadExtension(Constants.VencordExtensionPath);
         this.logger.info(`Loaded Vencord Extension v${extension.version} from ${Constants.VencordExtensionPath}`);
     }
@@ -340,7 +303,6 @@ export class DiscordBotClient extends EventEmitter {
         this.setupTray();
         const primaryDisplay = screen.getPrimaryDisplay();
         const { width, height } = primaryDisplay.workAreaSize;
-        // Create the browser window.
         this.win = new BrowserWindow({
             width: Math.floor(width * 0.9),
             height: Math.floor(height * 0.9),
@@ -359,7 +321,6 @@ export class DiscordBotClient extends EventEmitter {
             title: Constants.AppName,
             trafficLightPosition: { x: 10, y: 10 },
         });
-        // BrowserWindow Event
         this.win.on("close", event => {
             if (!this.#shouldQuitApp) {
                 event.preventDefault();
@@ -373,7 +334,6 @@ export class DiscordBotClient extends EventEmitter {
         await this.sessionPatch();
 
         this.logger.info(`Electron UserData: ${app.getPath("userData")}`);
-        // Microphone
         if (process.platform === "darwin") {
             this.session.setPermissionRequestHandler(async (_webContents, permission, callback, details) => {
                 let granted = true;
@@ -388,9 +348,7 @@ export class DiscordBotClient extends EventEmitter {
                 callback(granted);
             });
         }
-        // webContents
         if (!app.isPackaged) this.win.webContents.openDevTools();
-        // Discord popout
         this.win.webContents.setWindowOpenHandler(({ url }) => {
             this.logger.log("WindowOpenHandler", url);
             switch (url) {
@@ -420,7 +378,6 @@ export class DiscordBotClient extends EventEmitter {
                             autoHideMenuBar: true,
                             width: 1080,
                             height: 720,
-                            // titleBarStyle: "hidden",
                             webPreferences: {
                                 webSecurity: false,
                             },
@@ -459,7 +416,6 @@ export class DiscordBotClient extends EventEmitter {
 
             return { action: "deny" };
         });
-        // WebContents Event
         this.win.webContents
             .on("did-create-window", (window, details) => {
                 window.show();
@@ -494,7 +450,6 @@ export class DiscordBotClient extends EventEmitter {
     }
     checkingForUpdates (forceEmitted = false) {
         if (!app.isPackaged) {
-            // autoUpdater.forceDevUpdateConfig = true; // ! Test
             if (forceEmitted) {
                 this.showNotification({
                     title: "Update Manager",
@@ -508,8 +463,6 @@ export class DiscordBotClient extends EventEmitter {
         autoUpdater.logger = scope("AutoUpdater");
         autoUpdater.disableWebInstaller = true;
 
-        // Auto download only on Windows and Linux
-        // Mac requires code signing for auto-update to work properly
         autoUpdater.autoDownload = process.platform !== "darwin";
 
         autoUpdater.removeAllListeners();
@@ -557,7 +510,6 @@ export class DiscordBotClient extends EventEmitter {
             });
 
             autoUpdater.on("error", err => {
-                // Only log error, show notification if forced
                 this.logger.error("Error in auto-updater: " + err);
                 if (forceEmitted) {
                     this.showNotification(
@@ -612,7 +564,6 @@ export class DiscordBotClient extends EventEmitter {
         this.#shouldQuitApp = true;
         app.quit();
     }
-    // Editor Window
     openConfigEditorWindow () {
         if (this.editorWindow && !this.editorWindow.isDestroyed()) {
             this.editorWindow.show();
@@ -631,12 +582,6 @@ export class DiscordBotClient extends EventEmitter {
             icon: Constants.icon128,
             frame: true,
             autoHideMenuBar: true,
-            /*
-            ...(process.platform === "darwin" && {
-                titleBarStyle: "hidden",
-                trafficLightPosition: { x: 10, y: 10 },
-            }),
-            */
         });
         this.editorWindow.loadFile(Constants.ConfigEditorHTMLPath);
         this.editorWindow.on("closed", () => {
@@ -644,7 +589,6 @@ export class DiscordBotClient extends EventEmitter {
         });
     }
 
-    // Beta
     openDiscordMessageEditorWindow () {
         const editorWindow = new BrowserWindow({
             width: 1080,
@@ -657,20 +601,13 @@ export class DiscordBotClient extends EventEmitter {
                 webSecurity: false,
                 sandbox: false,
                 preload: path.join(__dirname, "MessageEditorPreload.js"),
-                partition: "temp:" + randomUUID(), // Use a temporary session for the message editor
+                partition: "temp:" + randomUUID(),
             },
             icon: Constants.icon128,
             frame: true,
             autoHideMenuBar: true,
-            /*
-            ...(process.platform === "darwin" && {
-                titleBarStyle: "hidden",
-                trafficLightPosition: { x: 10, y: 10 },
-            }),
-            */
         });
         editorWindow.loadURL(`http://localhost:${this.messageEditorPort}`);
-        // Handle Message Editor Ports
         editorWindow.webContents.ipc.once(IPCEvent.MessageEditorReactReady, () => {
             this.logger.debug("Message Editor is ready. Setting up MessageChannel...");
             const { port1, port2 } = new MessageChannelMain();

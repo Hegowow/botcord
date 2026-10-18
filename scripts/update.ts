@@ -1,5 +1,3 @@
-/* Copyright Elysia © 2025 */
-
 import { fetch } from "undici";
 import path from "path";
 import fs from "fs";
@@ -42,19 +40,10 @@ fetch(URL)
             const dom = new JSDOM(text);
             const { document } = dom.window;
 
-            // Script Tags
             const scriptTags = document.querySelectorAll("script");
 
-            // Replace Environment
             const replaceEnv: Record<string, string | number> = {
                 API_VERSION: 10,
-                /*
-                API_ENDPOINT: "'//' + window.location.host + '/api'",
-                WEBAPP_ENDPOINT: "'//' + window.location.host",
-                MIGRATION_DESTINATION_ORIGIN:
-                    "window.location.protocol + '//' + window.location.host",
-                // PUBLIC_PATH: '//discord.com/assets/',
-                */
             };
 
             scriptTags.forEach(scriptTag => {

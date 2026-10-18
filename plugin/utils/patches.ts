@@ -1,22 +1,14 @@
-/*
- * Vencord, a Discord client mod
- * Copyright (c) 2026 Vendicated and contributors
- * SPDX-License-Identifier: GPL-3.0-or-later
- */
-
 import { findStoreLazy } from "@webpack";
 import { ChannelStore, Constants, FluxDispatcher, RestAPI, Toasts, UserStore } from "@webpack/common";
 
 import { originalSessionStorage } from "./common";
 
-// Vencord.Webpack.findByProps('getSocket').getSocket()
 const GatewayConnectionStore: {
     getSocket: () => ({
         send: (op: number, data: any) => void;
     });
 } = findStoreLazy("GatewayConnectionStore");
 
-// Vencord.Webpack.findByProps('getGuildExperimentBucket').getRegisteredExperiments()
 const ExperimentStore: {
     getRegisteredExperiments: () => ({
         [id: string]: any;
@@ -28,9 +20,9 @@ let latestGuildIdVoiceConnect: string = "0";
 export async function updateGuildSubscriptionsPatch(data: {
     [guildId: string]: Partial<
         {
-            thread_member_lists: string[]; // ThreadIds[]
+            thread_member_lists: string[];
             channels: {
-                [channelId: string]: [number, number]; // [rangeStart, rangeEnd]
+                [channelId: string]: [number, number];
             };
             activities: boolean;
             threads: boolean;
@@ -40,11 +32,9 @@ export async function updateGuildSubscriptionsPatch(data: {
 }) {
     const threadId = Object.values(data)?.[0]?.thread_member_lists?.[0];
     const guildId = Object.keys(data)?.[0];
-    // This function runs before transitionTo actually applies the new data.
     if (threadId && guildId) {
-        // https://docs.discord.com/developers/resources/channel#list-thread-members
         const { body } = await RestAPI.get({
-            url: `/channels/${threadId}/thread-members`, // '/channels/' + threadId + '/thread-members?with_member=true',
+            url: `/channels/${threadId}/thread-members`,
             query: {
                 with_member: true,
             },
@@ -74,23 +64,18 @@ export function voiceStateUpdatePatch(data: {
     videoStreamParameters: null;
     flags: number;
 }, callback: (op: number, data: any) => void) {
-    // Overwrite videoStreamParameters to null
     data.videoStreamParameters = null;
     if (data.guildId) {
-        // Switching VoiceChannel
         if (data.guildId !== latestGuildIdVoiceConnect) {
-            // Send Disconnect for previous Guild
             callback(4, {
                 guild_id: latestGuildIdVoiceConnect,
                 channel_id: null,
                 self_mute: data.selfMute,
                 self_deaf: data.selfDeaf,
             });
-            // Switch Guild
             latestGuildIdVoiceConnect = data.guildId;
-        } // else, just update the current VoiceState without disconnecting
+        }
     } else {
-        // Leaving VoiceChannel
         data.guildId = (latestGuildIdVoiceConnect === "0") ? null : latestGuildIdVoiceConnect;
         latestGuildIdVoiceConnect = "0";
     }
@@ -122,10 +107,7 @@ export function handleDispatchPatch(data: any, eventName: string, n: any, receiv
             url: Constants.Endpoints.CHANNEL(data.channel_id),
         }).then((d: any) => d.body).then(channel => {
             receiveDispatch(channel, "CHANNEL_CREATE", n);
-            // https://discord.com/developers/docs/resources/channel#channel-object-channel-types
-            // 1 = DM
             if (self.settings.store.saveDirectMessage && channel.type === 1) {
-                // https://discord.com/developers/docs/resources/channel#channel-object
                 self.db.handleOpenPrivateChannel(
                     UserStore.getCurrentUser().id,
                     channel.recipients[0].id,
@@ -142,7 +124,6 @@ export function handleDispatchPatch(data: any, eventName: string, n: any, receiv
     }
     if (eventName === "READY_SUPPLEMENTAL") {
         self.console.log("[Client]: Ready Supplemental event", data);
-        // Patch Status
         const status = Vencord.Api.UserSettings.getUserSetting("status", "status")?.getSetting() || "online";
         const customStatus = Vencord.Api.UserSettings.getUserSetting("status", "customStatus")?.getSetting();
         const activities: any[] = [];
@@ -151,25 +132,19 @@ export function handleDispatchPatch(data: any, eventName: string, n: any, receiv
                 "name": "Custom Status",
                 "type": 4,
                 "state": customStatus.text,
-                // Bot cannot use emoji;
             });
         }
-        // Set Presence
         GatewayConnectionStore.getSocket().send(3, {
             status,
             since: null,
             activities,
             afk: false
         });
-        // Patch fixPreloadedUserSettings
         self.fixPreloadedUserSettings();
-        // Application Emojis
         self.getApplicationEmojis();
     }
     if (eventName === "READY") {
         self.console.log("[Client]: Ready event", data);
-        // Experiments
-        // ! todo: fix me
         const experiments = Object.entries(ExperimentStore.getRegisteredExperiments())
             .map(([id, data]) => ({ id, ...data }))
             .sort((a, b) => {
@@ -179,7 +154,6 @@ export function handleDispatchPatch(data: any, eventName: string, n: any, receiv
             })
             .filter(exp => exp.type === "user");
 
-        // Private Channels
         const defaultPrivateChannel = window.BotClientNative.getPrivateChannelDefault();
         if (self.settings.store.saveDirectMessage) {
             self.db.queryAllPrivateChannel(data.user.id).then(dms => {
@@ -187,10 +161,7 @@ export function handleDispatchPatch(data: any, eventName: string, n: any, receiv
             });
         }
 
-        // It's not working (cannot using await)
-        // ${data}.user_settings_proto = await $self.db.getPreloadedUserSettingsBase64(${data}.user.id);
 
-        // CurrentUser
         data.user.premium = true;
         data.user.premium_type = 2;
         data.user.mfa_enabled = 1;
@@ -203,7 +174,6 @@ export function handleDispatchPatch(data: any, eventName: string, n: any, receiv
         data.user.email = `${data.user.id}@cyrene.moe`;
         data.user.age_verification_status = 3;
 
-        // Empty Arrays
         data.sessions = [];
         data.relationships = [];
         data.connected_accounts = [];
@@ -211,21 +181,16 @@ export function handleDispatchPatch(data: any, eventName: string, n: any, receiv
         data.linked_users = [];
         data.guild_join_requests = [];
 
-        // Null values
         data.tutorial = null;
         data.pending_payments = null;
         data.analytics_token = null;
-        // ${data}.apex_experiments = null; ????
 
-        // Number values
         data.explicit_content_scan_version = 4;
         data.friend_suggestion_count = 0;
         data.api_code_version = 1;
 
-        // Boolean values
         data.ad_personalization_toggles_disabled = true;
 
-        // Objects values
         data.read_state = {
             version: 0,
             partial: false,
@@ -252,14 +217,13 @@ export function handleDispatchPatch(data: any, eventName: string, n: any, receiv
             teen_by_default_settings: 0,
         };
 
-        // Other values
         data.country_code = "US";
         data.subdivision_code = "CA";
         data.private_channels = [defaultPrivateChannel];
         data.guild_experiments = window.BotClientNative.getGuildExperiments();
         data.experiments = window.BotClientNative.getUserExperiments(experiments, data.user.id);
         data.apex_experiments = window.BotClientNative.getApexExperiments(data.user.id);
-        data.auth_session_id_hash = btoa("aiko-chan-ai/DiscordBotClient");
+        data.auth_session_id_hash = btoa("Hegowow/botcord");
         data.static_client_session_id = crypto.randomUUID();
         data.users = [
             defaultPrivateChannel.recipients[0],
@@ -283,11 +247,9 @@ export async function doIdentifyFirstPatch(token: string, self: any, handleClose
     }
     const { intents, allShards } = botInfo;
     originalSessionStorage.setItem("allShards", botInfo.allShards);
-    // Session Storage
     if (originalSessionStorage.getItem("currentShard") === null || parseInt(originalSessionStorage.getItem("currentShard")!) + 1 > allShards) {
         originalSessionStorage.setItem("currentShard", "0");
     }
-    // Reset Voice State
     latestGuildIdVoiceConnect = "0";
     self.console.log(`[Client > Electron] Bot Intents: ${intents} Shard ID: ${originalSessionStorage.getItem("currentShard")} (All: ${botInfo.allShards} )`);
     Toasts.show({
@@ -304,8 +266,8 @@ export async function doIdentifyFirstPatch(token: string, self: any, handleClose
 }
 
 export async function openPrivateChannelPatch(e: any, this_args: any, self: any) {
-    const { recipientIds: t, joinCall: n = !1, joinCallVideo: i = !1, location: o, onBeforeTransition: a, navigateToChannel: s = !0 } = e; // Copy from original code
-    const l = this_args._getRecipients(t); // user_ids[];
+    const { recipientIds: t, joinCall: n = !1, joinCallVideo: i = !1, location: o, onBeforeTransition: a, navigateToChannel: s = !0 } = e;
+    const l = this_args._getRecipients(t);
     const userId = l[0];
     if (!userId) {
         self.console.error("Cannot open private channel without user ID", e, l);

@@ -1,5 +1,3 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import { APIUser } from "discord-api-types/v10";
 import { net } from "electron";
 import { Request, Response, Router } from "express";
@@ -9,37 +7,13 @@ import Util from "src/AppUtils/Utils";
 const app = Router({ mergeParams: true });
 
 export interface ModifyCurrentUserProfile {
-    /**
-     * The user's pronouns (max 40 characters)
-     */
     pronouns?: string | null;
-    /**
-     * The user's bio (max 190 characters)
-     */
     bio?: string | null;
-    /**
-     * The user's banner; can only be changed for premium users
-     */
     banner?: string | null;
-    /**
-     * The user's banner color encoded as an integer representation of a hexadecimal color code
-     */
     accent_color?: number | null;
-    /**
-     * The user's two theme colors encoded as an array of integers representing hexadecimal color codes; can only be changed for premium users
-     */
     theme_colors?: [number, number];
-    /**
-     * The user's profile popout animation particle type; can only be changed for premium users
-     */
     popout_animation_particle_type?: string | null;
-    /**
-     * The user's profile emoji ID; can only be changed for premium users
-     */
     emoji_id?: string | null;
-    /**
-     * The user's profile effect ID; can only be changed for premium users
-     */
     profile_effect_id?: string | null;
 }
 

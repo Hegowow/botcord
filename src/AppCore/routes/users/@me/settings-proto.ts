@@ -1,5 +1,3 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import { FrecencyUserSettings, PreloadedUserSettings } from "discord-protos";
 import { IpcMainEvent } from "electron";
 import { Request, Response, Router } from "express";
@@ -8,11 +6,6 @@ import Util from "src/AppUtils/Utils";
 
 const app = Router({ mergeParams: true });
 
-/**
- * Wait for an IPC event matching a specific uid (correlation ID).
- * This avoids race conditions when multiple requests arrive simultaneously
- * by filtering on the uid so each request only gets its own response.
- */
 function waitForSettingsEvent (
     emitter: NodeJS.EventEmitter,
     eventName: string,
@@ -21,7 +14,7 @@ function waitForSettingsEvent (
 ): Promise<[IpcMainEvent, string, string]> {
     return new Promise((resolve, reject) => {
         const onEvent = (event: IpcMainEvent, botId: string, settings: string) => {
-            if (botId !== uid) return; // Not our response, ignore
+            if (botId !== uid) return;
             clearTimeout(timer);
             emitter.removeListener(eventName, onEvent);
             resolve([event, botId, settings]);
@@ -49,9 +42,7 @@ app.all("/1", async (req, res) => {
             IPCEvent.GetPreloadedUserSettingsResponse,
             uid,
         );
-        // Request user settings from database
         globalThis.botClient.win.webContents.send(IPCEvent.GetPreloadedUserSettings, uid);
-        // [event, botId, settings]
         const userSettingEvent = await promise;
         const userSettings = await PreloadedUserSettings.fromBase64(userSettingEvent[2]);
         if (req.method.toUpperCase() === "GET") {
@@ -70,9 +61,6 @@ app.all("/1", async (req, res) => {
             >,
             resC: Response,
         ) => {
-            /**
-             * @type {PreloadedUserSettings}
-             */
             const decoded = PreloadedUserSettings.fromBase64(reqC.body?.settings || "");
             for (const key of Object.keys(decoded)) {
                 // eslint-disable-next-line
@@ -106,9 +94,7 @@ app.all("/2", async (req, res) => {
             IPCEvent.GetFrecencyUserSettingsResponse,
             uid,
         );
-        // Request user settings from database
         globalThis.botClient.win.webContents.send(IPCEvent.GetFrecencyUserSettings, uid);
-        // [event, botId, settings]
         const userSettingEvent = await promise;
         const userSettings = await FrecencyUserSettings.fromBase64(userSettingEvent[2]);
         if (req.method.toUpperCase() === "GET") {
@@ -126,9 +112,6 @@ app.all("/2", async (req, res) => {
             >,
             resC: Response,
         ) => {
-            /**
-             * @type {FrecencyUserSettings}
-             */
             const decoded = FrecencyUserSettings.fromBase64(reqC.body?.settings || "");
             for (const key of Object.keys(decoded)) {
                 // eslint-disable-next-line

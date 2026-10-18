@@ -1,5 +1,3 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import { APIGuild, APIGuildMember } from "discord-api-types/v10";
 import { net } from "electron";
 import { Request, Response, Router } from "express";
@@ -8,10 +6,6 @@ import Util from "src/AppUtils/Utils";
 
 const app = Router({ mergeParams: true });
 
-// Convert Guild object to GuildProfile object
-// with_counts
-
-// Ref: https://github.com/discord-userdoccers/discord-userdoccers/pull/346
 
 function convertGuildObjectToGuildProfileObject (guild: APIGuild & { code?: number }) {
     if (!guild.id && guild.code) {
@@ -34,8 +28,8 @@ function convertGuildObjectToGuildProfileObject (guild: APIGuild & { code?: numb
             game_activity: {},
             tag: null,
             badge: 0,
-            badge_color_primary: "#ff0000", // ?
-            badge_color_secondary: "#800000", // ?
+            badge_color_primary: "#ff0000",
+            badge_color_secondary: "#800000",
             badge_hash: null,
             traits: [],
             features: guild.features,
@@ -79,7 +73,6 @@ export interface ModifyCurrentGuildProfile {
     description: string;
     icon: string | null;
     custom_banner: string | null;
-    // ?
     visibility: number;
     brand_color_primary: unknown;
     traits: unknown[];
@@ -127,51 +120,16 @@ app.patch("/", async (req, res) => {
 });
 
 export interface ModifyCurrentGuildMemberProfile {
-    /**
-     * The guild-specific nickname of the member (1-32 characters)
-     *
-     * Permission: CHANGE_NICKNAME
-     */
     nick?: string | null;
-    /**
-     * The member's guild avatar; can only be changed for premium users and bots
-     */
     avatar?: string | null;
-    /**
-     * The ID of the member's guild avatar decoration; can only be changed for premium users
-     */
     avatar_decoration_id?: string | null;
-    /**
-     * The SKU ID of the member's guild avatar decoration; can only be changed for premium users
-     */
     avatar_decoration_sku_id?: string | null;
-    /**
-     * The member's equipped collectibles; can only be changed for premium users
-     */
     collectibles?: unknown | null;
-    /**
-     * The display name font to use; can only be changed for premium users
-     */
     display_name_font_id?: number | null;
-    /**
-     * The display name effect to use; can only be changed for premium users
-     */
     display_name_effect_id?: number | null;
-    /**
-     * The display name colors to use encoded as an array of integers representing hexadecimal color codes (max 2); can only be changed for premium users
-     */
     display_name_colors?: number;
-    /**
-     * The member's guild pronouns (max 40 characters)
-     */
     pronouns?: string | null;
-    /**
-     * The member's guild bio (max 190 characters); can only be changed for premium users and bots
-     */
     bio?: string | null;
-    /**
-     * The member's guild banner; can only be changed for premium users and bots
-     */
     banner?: string | null;
 }
 
@@ -225,7 +183,6 @@ app.patch("/@me", async (req, res) => {
     return Util.getDataFromRequest(req, res, callbackEditCurrentMember);
 });
 
-// ??? WTF discord ???
 app.patch("/%40me", async (req, res) => {
     return Util.getDataFromRequest(req, res, callbackEditCurrentMember);
 });

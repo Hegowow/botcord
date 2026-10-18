@@ -2,7 +2,7 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<title>DiscordBotClient - Config Editor</title>
+		<title>Botcord - Config Editor</title>
 		<style>
 			html,
 			body,
@@ -150,10 +150,10 @@
 				);
 				editor.onDidChangeModelContent(() => {
 					if (editor.getValue() === content) {
-						document.title = 'DiscordBotClient - Config Editor';
+						document.title = 'Botcord - Config Editor';
 					} else {
 						document.title =
-							'DiscordBotClient - Config Editor (Unsaved Changes - Press Ctrl+S to save)';
+							'Botcord - Config Editor (Unsaved Changes - Press Ctrl+S to save)';
 					}
 				});
 				// Ctrl+S

@@ -1,5 +1,3 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import { APIPublicThreadChannel, APIThreadList, APIThreadMember } from "discord-api-types/v10";
 import { net } from "electron";
 import { Request, Router } from "express";
@@ -8,7 +6,7 @@ import Constants from "src/AppCore/Constants";
 const app = Router({ mergeParams: true });
 
 const CACHE_MAX_SIZE = 200;
-const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const CACHE_TTL_MS = 10 * 60 * 1000;
 
 interface ThreadCacheEntry {
     timestamps: Set<number>;
@@ -22,9 +20,7 @@ function getOrCreateCacheEntry (channelId: string): Set<number> {
     if (existing && Date.now() - existing.createdAt < CACHE_TTL_MS) {
         return existing.timestamps;
     }
-    // Evict expired entry or create new
     mapCache.delete(channelId);
-    // Evict oldest entries if cache is full
     if (mapCache.size >= CACHE_MAX_SIZE) {
         const oldestKey = mapCache.keys().next().value;
         if (oldestKey) mapCache.delete(oldestKey);
@@ -59,7 +55,6 @@ app.all(
         const channelId = req.params.id;
         let { sort_by, sort_order } = req.query;
         const { archived, tag_setting, name, tag, limit, offset } = req.query;
-        // Force set
         sort_by = "archive_time";
         sort_order = "desc";
         if (tag || name) {
@@ -69,7 +64,7 @@ app.all(
                 has_more: false,
                 total_results: 0,
                 first_messages: [],
-            }); // Discord API limitation
+            });
         }
         let threads: APIPublicThreadChannel[] = [];
         let members: APIThreadMember[] = [];
@@ -93,45 +88,7 @@ app.all(
                 .then(r => r.json() as Promise<APIThreadList>);
             threads = (publicThread.threads as APIPublicThreadChannel[]) || [];
             members = publicThread.members || [];
-            // first_messages = publicThread.first_messages || [];
-            // public_has_more = publicThread.has_more || false;
         }
-        /*
-	function sorting(a = 0, b = 0) {
-		if (sort_order === 'asc') {
-			return a > b ? 1 : a < b ? -1 : 0; // Ascending order
-		} else {
-			return a < b ? 1 : a > b ? -1 : 0; // Descending order
-		}
-	}
-	switch (sort_by) {
-		case 'archive_time': {
-			threads = threads.sort((a, b) =>
-				sorting(
-					new Date(a.thread_metadata.archive_timestamp)?.getTime(),
-					new Date(a.thread_metadata.archive_timestamp)?.getTime(),
-				),
-			);
-			break;
-		}
-		case 'creation_time': {
-			threads = threads.sort((a, b) =>
-				sorting(
-					new Date(a.thread_metadata.create_timestamp)?.getTime(),
-					new Date(a.thread_metadata.create_timestamp)?.getTime(),
-				),
-			);
-			break;
-		}
-		case 'last_message_time':
-		default: {
-			threads = threads.sort((a, b) =>
-				sorting(BigInt(a.last_message_id), BigInt(b.last_message_id)),
-			);
-			break;
-		}
-	}
-	*/
         for (let i = 0; i < threads.length; i++) {
             const timestamp = threads[i].thread_metadata?.archive_timestamp ?? 0;
             set.add(new Date(timestamp).getTime());

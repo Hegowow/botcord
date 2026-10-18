@@ -1,5 +1,3 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import { Request, Router } from "express";
 
 const app = Router({ mergeParams: true });

@@ -1,9 +1,3 @@
-/*
- * Vencord, a Discord client mod
- * Copyright (c) 2025 Vendicated and contributors
- * SPDX-License-Identifier: GPL-3.0-or-later
- */
-
 const EPOCH = 1_420_070_400_000;
 let INCREMENT = BigInt(0);
 
@@ -18,7 +12,6 @@ export class SnowflakeUtil extends null {
         }
         if (INCREMENT >= 4095n) INCREMENT = BigInt(0);
 
-        // Assign WorkerId as 1 and ProcessId as 0:
         return (
             (BigInt(timestamp - EPOCH) << 22n) |
             (1n << 17n) |

@@ -1,9 +1,3 @@
-/*
- * Vencord, a Discord client mod
- * Copyright (c) 2025 Vendicated and contributors
- * SPDX-License-Identifier: GPL-3.0-or-later
- */
-
 import { Logger } from "@utils/Logger";
 import Dexie from "dexie";
 
@@ -30,7 +24,6 @@ export class BotClientDatabase {
         logger.log("Initializing database");
         registerMigrations(this.#db);
     }
-    // PrivateChannel methods
     queryAllPrivateChannel(botId: string) {
         logger.log("Querying all private channels for bot", botId);
         return this.database.PrivateChannel.where("botId").equals(botId).toArray();
@@ -62,7 +55,6 @@ export class BotClientDatabase {
         logger.log("Clearing DMs cache for bot", botId);
         return this.database.PrivateChannel.where("botId").equals(botId).delete();
     }
-    // PreloadedUserSettings & FrecencyUserSettings methods
     async getPreloadedUserSettings(botId: string) {
         logger.log("Getting preloaded user settings for bot", botId);
         const v = await this.database.PreloadedUserSettings.get(botId);
@@ -74,7 +66,6 @@ export class BotClientDatabase {
             });
             return DefaultPreloadedUserSettings;
         } else {
-            // v.data.userContent = DefaultPreloadedUserSettings.userContent;
             return v.data;
         }
     }

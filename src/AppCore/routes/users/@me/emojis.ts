@@ -1,7 +1,3 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
-// Custom API, Discord doesn't have this endpoint
-
 import { APIApplicationEmoji } from "discord-api-types/v10";
 import { net } from "electron";
 import { Router } from "express";
@@ -11,7 +7,7 @@ import Util from "src/AppUtils/Utils";
 const app = Router({ mergeParams: true });
 
 const EMOJI_CACHE_MAX_SIZE = 100;
-const EMOJI_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const EMOJI_CACHE_TTL_MS = 5 * 60 * 1000;
 
 interface EmojiCacheEntry {
     timeout: number;
@@ -20,9 +16,6 @@ interface EmojiCacheEntry {
 
 const cacheMap = new Map<string, EmojiCacheEntry>();
 
-/**
- * Evict expired entries from cache to prevent memory leaks
- */
 function evictExpiredEntries () {
     const now = Date.now();
     for (const [key, entry] of cacheMap) {
@@ -41,9 +34,7 @@ app.get("/", (req, res) => {
     if (cached && cached.timeout > Date.now()) {
         return res.send(cached.data);
     }
-    // Evict expired entries periodically
     evictExpiredEntries();
-    // Evict oldest if cache is full
     if (cacheMap.size >= EMOJI_CACHE_MAX_SIZE) {
         const oldestKey = cacheMap.keys().next().value;
         if (oldestKey) cacheMap.delete(oldestKey);

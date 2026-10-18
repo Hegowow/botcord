@@ -1,5 +1,3 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import { scope } from "electron-log";
 import express from "express";
 import { readFileSync } from "fs";
@@ -38,7 +36,6 @@ const server = https.createServer(
 
 const ignoreHeaders = ["cookie", "sec-", "referer", "origin", "authorization", "host"];
 
-// Handle headers
 app.all("*", function (req, res, next) {
     req.originalHeaders = req.headers;
     const headers: typeof req.headers = {};
@@ -65,7 +62,6 @@ app.all("/developers/*", (req, res) => {
     return res.redirect("/app");
 });
 
-// Other
 app.use((req, res, next) => {
     if (req.originalUrl.endsWith(".map")) return res.status(404).send();
     if (Constants.BlacklistRoutes.some(_ => req.originalUrl.includes(_))) {
@@ -74,14 +70,11 @@ app.use((req, res, next) => {
             code: 20001,
         });
     }
-    // API routes
     if (req.originalUrl.includes("/api/")) return Util.proxy(req, res);
-    // Main page
     if (["/", "/app", "/login"].includes(req.path) || ["/channels/"].some(s => req.path.startsWith(s))) {
         logger.log("Serving Discord HTML for route:", req.path);
         return res.send(readFileSync(Constants.DiscordHTMLPath, "utf8"));
     }
-    // Other routes
     req.headers = req.originalHeaders;
     return Util.proxy(req, res);
 });
@@ -93,7 +86,7 @@ export default async function startAppServer (): Promise<number> {
             resolve(address.port);
             logger.log(`API Server listening on https://localhost:${address.port}`);
         };
-        server.listen(0).once("listening", callback);
+        server.listen(0, "127.0.0.1").once("listening", callback);
         server.on("error", reject);
     });
 }

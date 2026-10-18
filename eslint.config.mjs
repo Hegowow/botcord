@@ -1,8 +1,5 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import pluginJs from "@eslint/js";
 import nodePlugin from "eslint-plugin-n";
-import simpleHeader from "eslint-plugin-simple-header";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
 import unusedImports from "eslint-plugin-unused-imports";
 import globals from "globals";
@@ -13,26 +10,15 @@ export default [
         ignores: ["dist/", "scripts/", "**/*.js"],
     },
     { languageOptions: { globals: globals.node } },
-    // Configs
     pluginJs.configs.recommended,
     ...tseslint.configs.recommended,
-    // nodePlugin.configs["flat/recommended-script"],
-    // Rules
     {
         plugins: {
             "simple-import-sort": simpleImportSort,
             "unused-imports": unusedImports,
-            "simple-header": simpleHeader,
             n: nodePlugin,
         },
         rules: {
-            "simple-header/header": [
-                "error",
-                {
-                    files: ["assets/header.txt"],
-                    templates: { author: [".*", "Elysia"] },
-                },
-            ],
             "n/exports-style": ["error", "module.exports"],
             "no-unused-vars": [
                 "warn",

@@ -1,5 +1,3 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import { Request, Router } from "express";
 import NitroData from "src/AppUtils/NitroData";
 

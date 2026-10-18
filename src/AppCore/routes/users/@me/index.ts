@@ -1,5 +1,3 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import { APIUser } from "discord-api-types/v10";
 import { net } from "electron";
 import { Router } from "express";

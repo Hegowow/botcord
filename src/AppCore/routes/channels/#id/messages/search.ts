@@ -1,10 +1,9 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import crypto from "node:crypto";
 
 import { APIMessage } from "discord-api-types/v10";
 import { net } from "electron";
 import { Request, Router } from "express";
+import Branding from "src/AppCore/Branding";
 import Constants from "src/AppCore/Constants";
 
 const app = Router({ mergeParams: true });
@@ -29,7 +28,7 @@ app.get(
         const salt = Math.random().toString();
         const hash = crypto
             .createHash("md5")
-            .update(salt + "elysia")
+            .update(salt + Branding.SystemUserName)
             .digest("hex");
         let { channel_id } = req.query;
         const { max_id, min_id } = req.query;

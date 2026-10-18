@@ -1,14 +1,14 @@
 {
-  "name": "discord-bot-client",
-  "productName": "DiscordBotClient",
+  "name": "botcord",
+  "productName": "Botcord",
   "version": "3.9.3",
-  "description": "DiscordBotClient - login into discord with a bot token",
+  "description": "Botcord - connecte-toi à Discord avec le token de ton bot",
   "author": {
-    "name": "aiko-chan-ai",
-    "email": "aiko@shiroko.onmicrosoft.com"
+    "name": "kahodev",
+    "url": "https://github.com/Hegowow"
   },
   "repository": {
-    "url": "https://github.com/aiko-chan-ai/DiscordBotClient/"
+    "url": "https://github.com/Hegowow/botcord/"
   },
   "license": "GPL-3.0",
   "main": "build/index.js",
@@ -44,7 +44,6 @@
     "@types/morgan": "^1.9.10",
     "@types/multer": "^2.2.0",
     "@types/node": "^26.1.1",
-    "@types/probe-image-size": "^7.2.5",
     "@typescript-eslint/eslint-plugin": "^8.65.0",
     "@typescript-eslint/parser": "^8.65.0",
     "electron": "^43.2.0",
@@ -54,7 +53,6 @@
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-n": "^17.23.2",
     "eslint-plugin-prettier": "^5.5.6",
-    "eslint-plugin-simple-header": "^1.2.2",
     "eslint-plugin-simple-import-sort": "12.1.1",
     "eslint-plugin-unused-imports": "^4.3.0",
     "js-beautify": "^1.15.4",
@@ -79,7 +77,6 @@
     "morgan": "^1.11.0",
     "multer": "^2.2.0",
     "murmurhash": "^2.0.1",
-    "probe-image-size": "^7.3.0",
     "selfsigned": "^2.4.1",
     "undici": "^7.24.3"
   },
@@ -87,7 +84,6 @@
     "files": [
       "!docs",
       "!scripts",
-      "!Vencord",
       "!src",
       "!tsconfig.json",
       "!tsup.config.ts",
@@ -100,12 +96,15 @@
       "assets",
       "assets/editor",
       "build",
-      "VencordExtension"
+      "VencordExtension",
+      "!Vencord",
+      "!plugin",
+      "!NOTICE.md"
     ],
-    "appId": "DiscordBotClient",
-    "productName": "DiscordBotClient",
+    "appId": "dev.kaho.botcord",
+    "productName": "Botcord",
     "artifactName": "${productName}-${os}-${arch}.${ext}",
-    "copyright": "Copyright © 2026 aiko-chan-ai",
+    "copyright": "Copyright © 2026 kahodev",
     "mac": {
       "category": "public.app-category.social-networking",
       "target": [
@@ -135,7 +134,7 @@
       ],
       "desktop": {
         "entry": {
-          "Name": "DiscordBotClient",
+          "Name": "Botcord",
           "GenericName": "Internet Messenger",
           "Type": "Application",
           "Categories": "Network;InstantMessaging;Chat;",
@@ -164,8 +163,8 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "aiko-chan-ai",
-        "repo": "DiscordBotClient"
+        "owner": "Hegowow",
+        "repo": "botcord"
       }
     ],
     "asar": false

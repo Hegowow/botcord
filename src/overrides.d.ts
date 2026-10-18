@@ -1,5 +1,3 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import "express";
 
 import type { IncomingHttpHeaders } from "http";

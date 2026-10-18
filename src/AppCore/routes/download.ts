@@ -1,11 +1,10 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import { Router } from "express";
+import Branding from "src/AppCore/Branding";
 
 const app = Router({ mergeParams: true });
 
 app.get("/", (req, res) => {
-    return res.redirect("https://github.com/aiko-chan-ai/DiscordBotClient/releases");
+    return res.redirect(`${Branding.GithubRepoUrl}/releases`);
 });
 
 export default app;

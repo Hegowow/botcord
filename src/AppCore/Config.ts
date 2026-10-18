@@ -1,18 +1,8 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import { app } from "electron";
 import fs from "fs";
 import { parse, stringify } from "ini";
 import path from "path";
 
-/**
- * @typedef {Object} Config
- * @property {boolean} cache_assets - Whether to cache assets from `discord.com/assets`.
-  This can improve performance in environments with unstable or slow network connections.
- * @property {number} guilds_per_shard - Number of guilds per shard.
- * @property {boolean} suppress_intent_warning - Suppress intent warning.
- * @property {boolean} generate_fake_profile - Generate a fake profile for the user.
- */
 
 export type Config = {
     cache_assets: boolean;
@@ -22,10 +12,6 @@ export type Config = {
 };
 
 export class GlobalConfig {
-    /**
-     * Get the current configuration.
-     * @returns {Config} The current configuration object.
-     */
     config = this.defaultConfig();
     iniPath = path.join(app.getPath("userData"), "config.ini");
     constructor () {
@@ -51,9 +37,6 @@ export class GlobalConfig {
             throw e;
         }
     }
-    /**
-     * @returns {Config} The default configuration object.
-     */
     defaultConfig () {
         return {
             cache_assets: false,
@@ -62,9 +45,6 @@ export class GlobalConfig {
             generate_fake_profile: true,
         };
     }
-    /**
-     * Validate the current configuration.
-     */
     validateConfig () {
         for (const key in this.config) {
             if (!Object.prototype.hasOwnProperty.call(this.defaultConfig(), key)) {
@@ -96,10 +76,6 @@ export class GlobalConfig {
         if (!isNaN(Number(val)) && val.trim() !== "") return Number(val);
         return val;
     }
-    /**
-     * Get the INI formatted string of the current configuration.
-     * @returns {string} The INI formatted string.
-     */
     toString () {
         this.validateConfig();
         return stringify(this.config, {

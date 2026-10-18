@@ -1,5 +1,3 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import { contextBridge, ipcRenderer } from "electron";
 
 import { IPCEvent } from "./IPCEvents";
@@ -73,7 +71,6 @@ contextBridge.exposeInMainWorld("BotClientNative", {
     closeWindow: () => {
         ipcRenderer.send(IPCEvent.RequestCloseWindow);
     },
-    // Vesktop
     close (frameName: string) {
         ipcRenderer.send(IPCEvent.Close, frameName);
     },
@@ -89,7 +86,6 @@ contextBridge.exposeInMainWorld("BotClientNative", {
     flashFrame (flag: boolean) {
         ipcRenderer.send(IPCEvent.FlashFrame, flag);
     },
-    // Beta Features
     requestOpenMessageEditorWindow () {
         return ipcRenderer.invoke(IPCEvent.RequestOpenMessageEditorWindow);
     },
@@ -100,22 +96,6 @@ ipcRenderer.on(IPCEvent.MainAppReceiveEditorPort, event => {
     window.postMessage("forward-editor-port", "*", [port]);
 });
 
-/*
-contextBridge.exposeInMainWorld("ipcRender", {
-    // From render to main (1-way)
-    send: (channel: string, ...args: unknown[]) => {
-        ipcRenderer.send(channel, ...args);
-    },
-    // From main to render (1-way)
-    receive: (channel: string, listener: (...args: unknown[]) => unknown) => {
-        ipcRenderer.on(channel, (event, ...args) => listener(...args));
-    },
-    // From render to main and back again (2-way)
-    invoke: (channel: string, ...args: unknown[]) => {
-        return ipcRenderer.invoke(channel, args);
-    },
-});
-*/
 
 contextBridge.exposeInMainWorld("protoAPI", {
     GetPreloadedUserSettings: (listener: (botId: string) => unknown) => {
@@ -127,7 +107,6 @@ contextBridge.exposeInMainWorld("protoAPI", {
     SetPreloadedUserSettings: (listener: (botId: string, settings: string) => unknown) => {
         ipcRenderer.on(IPCEvent.SetPreloadedUserSettings, (event, botId, settings) => listener(botId, settings));
     },
-    //
     GetFrecencyUserSettings: (listener: (botId: string) => unknown) => {
         ipcRenderer.on(IPCEvent.GetFrecencyUserSettings, (event, botId) => listener(botId));
     },

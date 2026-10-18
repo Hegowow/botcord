@@ -1,9 +1,8 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import { DiscordSnowflake } from "@sapphire/snowflake";
 import { APIGuild } from "discord-api-types/v10";
 import { net } from "electron";
 import { Request, Router } from "express";
+import Branding from "src/AppCore/Branding";
 import Constants from "src/AppCore/Constants";
 
 const app = Router({ mergeParams: true });
@@ -18,8 +17,8 @@ function createFakeBoost (guildId: string) {
         pause_ends_at: null,
         user: {
             id: botId,
-            username: "elysia",
-            global_name: "DiscordBotClient",
+            username: Branding.SystemUserName,
+            global_name: Branding.AppName,
             avatar: null,
             avatar_decoration_data: null,
             collectibles: null,

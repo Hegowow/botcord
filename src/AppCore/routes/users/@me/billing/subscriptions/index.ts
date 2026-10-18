@@ -1,5 +1,3 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import { DiscordSnowflake } from "@sapphire/snowflake";
 import { Router } from "express";
 import Util from "src/AppUtils/Utils";
@@ -15,7 +13,7 @@ app.get("/", (req, res) => {
             canceled_at: null,
             current_period_start: new Date().toISOString(),
             current_period_end: new Date(
-                Date.now() + 31536000000, // 1 year
+                Date.now() + 31536000000,
             ).toISOString(),
             status: 1,
             payment_source_id: null,
@@ -35,7 +33,7 @@ app.get("/", (req, res) => {
             pause_ends_at: null,
             use_storekit_resubscribe: false,
             streak_started_at: new Date(
-                Date.now() - 31536000000, // 1 year
+                Date.now() - 31536000000,
             ).toISOString(),
             metadata: {},
             price: null,

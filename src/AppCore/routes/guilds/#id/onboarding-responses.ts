@@ -1,5 +1,3 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import { Request, Response, Router } from "express";
 import Util from "src/AppUtils/Utils";
 

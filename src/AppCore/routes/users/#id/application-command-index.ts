@@ -1,5 +1,3 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import { DiscordSnowflake } from "@sapphire/snowflake";
 import { Router } from "express";
 

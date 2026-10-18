@@ -1,5 +1,3 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import { readFileSync } from "fs";
 import { v3 } from "murmurhash";
 import Constants from "src/AppCore/Constants";
@@ -33,9 +31,7 @@ const disabledBuckets = [
     "2023-03_pomelo",
 ];
 
-// id -> bucket
 const forceEnabledBuckets: Record<string, number> = {
-    // "2025-06_dave_for_browser": 2, // Enable
 };
 
 function buildUserExperiment (obj: Record<string, string>, botId: string) {
@@ -76,7 +72,6 @@ export function UserExperiment (allData: Record<string, string>[], botId: string
     }
 }
 
-// Cache guild experiments to avoid reading file on every call
 let cachedGuildExperiments: unknown = null;
 
 export function GuildExperiment () {

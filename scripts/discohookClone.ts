@@ -1,5 +1,3 @@
-/* Copyright Elysia © 2025 */
-
 import { execSync } from "child_process";
 import fs from "fs";
 import path from "path";
@@ -14,7 +12,6 @@ function runCommand(command: string, cwd?: string) {
 }
 
 (async () => {
-    // Clone or update discohook
     if (!fs.existsSync(cloneDir)) {
         console.log("> Cloning aiko-chan-ai/discohook...");
         runCommand(`git clone --depth 1 https://github.com/aiko-chan-ai/discohook.git ${cloneDir}`);
@@ -30,7 +27,6 @@ function runCommand(command: string, cwd?: string) {
         }
     }
 
-    // Install dependencies
     console.log("> Installing discohook dependencies...");
     runCommand("npm install --force", cloneDir);
     console.log("> discohook dependencies installed.");

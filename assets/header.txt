@@ -1,1 +1,0 @@
-/* Copyright {author} © {year}. All rights reserved */

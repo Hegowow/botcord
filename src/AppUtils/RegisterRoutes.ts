@@ -1,10 +1,3 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
-// The source code below is taken from the Lambert-server library.
-// Credits to the original authors and contributors of Lambert-server for their work.
-// Some parts may have been modified or adapted to fit this project’s structure and requirements.
-// https://github.com/SamuelScheit/Lambert-server
-
 import { Express, Router } from "express";
 import fs from "fs";
 import { resolve } from "path";
@@ -30,7 +23,6 @@ export function traverseDirectorySync (options: TraverseDirectoryOptions): strin
     for (const file of routes.sort((a, b) => {
         const aIsParam = a.startsWith("#");
         const bIsParam = b.startsWith("#");
-        // Static routes first, parameterized routes (#id) last
         if (aIsParam && !bIsParam) return 1;
         if (!aIsParam && bIsParam) return -1;
         return a.localeCompare(b);
@@ -82,12 +74,12 @@ export function registerRouteSync (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     router: any,
 ): Router | undefined {
-    if (root.endsWith("/") || root.endsWith("\\")) root = root.slice(0, -1); // removes slash at the end of the root dir
-    let path = file.replace(root, ""); // remove root from path and
-    path = path.split(".").slice(0, -1).join("."); // trancate .js/.ts file extension of path
+    if (root.endsWith("/") || root.endsWith("\\")) root = root.slice(0, -1);
+    let path = file.replace(root, "");
+    path = path.split(".").slice(0, -1).join(".");
     path = path.replaceAll("#", ":").replaceAll("!", "?").replaceAll("\\", "/");
-    if (path.endsWith("/index")) path = path.slice(0, -6); // delete index from path
-    if (!path.length) path = "/"; // first root index.js file must have a / path
+    if (path.endsWith("/index")) path = path.slice(0, -6);
+    if (!path.length) path = "/";
 
     try {
         if (router.router) router = router.router;
@@ -97,7 +89,6 @@ export function registerRouteSync (
         }
         if (!path.startsWith("/")) path = "/" + path;
         route.use(path, <Router>router);
-        // console.log(`[Server] Registered route ${path}`);
         return router;
     } catch (error) {
         console.error(new Error(`[Server] Failed to register route ${path}: ${error}`));

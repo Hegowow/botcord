@@ -1,6 +1,5 @@
-/* Copyright Elysia © 2025. All rights reserved */
-
 import { Router } from "express";
+import Branding from "src/AppCore/Branding";
 
 const app = Router({ mergeParams: true });
 
@@ -9,7 +8,7 @@ app.get("/", (req, res) => {
         code: 0,
         message: "OK",
         version: globalThis.botClient.app.getVersion(),
-        isBotClient: req.headers["user-agent"]?.includes("DiscordBotClient") || false,
+        isBotClient: req.headers["user-agent"]?.includes(Branding.AppName) || false,
     });
 });
 

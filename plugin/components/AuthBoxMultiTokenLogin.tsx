@@ -1,16 +1,9 @@
-/*
- * Vencord, a Discord client mod
- * Copyright (c) 2025 Vendicated and contributors
- * SPDX-License-Identifier: GPL-3.0-or-later
- */
-
 import { Margins } from "@utils/margins";
 import { classes } from "@utils/misc";
 import { useEffect, useState } from "@webpack/common";
 
 import { authBoxModule, cl, inputModule } from "./AuthBoxTokenLogin";
 
-// Shared with the patched "Continue" button (validateTokenAndLogin), which is Discord's own button and lives outside this component
 export const multiTokenState = { value: "" };
 
 export default function AuthBoxMultiTokenLogin() {
