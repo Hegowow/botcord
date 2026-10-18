@@ -1,6 +1,8 @@
-# Botcord
+# KahoCord
 
-**Botcord** te permet d'utiliser la vraie interface de Discord avec ton **bot** : au lieu d'un e-mail et d'un mot de passe, tu te connectes avec le **token de ton bot**. Serveurs, salons, messages, embeds, réactions, vocal… comme un utilisateur Discord classique.
+<p align="center"><img src="assets/brand/wordmark.png" alt="KahoCord" width="420"></p>
+
+**KahoCord** te permet d'utiliser la vraie interface de Discord avec ton **bot** : au lieu d'un e-mail et d'un mot de passe, tu te connectes avec le **token de ton bot**. Serveurs, salons, messages, embeds, réactions, vocal… comme un utilisateur Discord classique.
 
 Développé par **kahodev**.
 
@@ -12,7 +14,6 @@ Développé par **kahodev**.
 - [Connexion](#connexion)
 - [Fonctionnalités](#fonctionnalités)
 - [Personnalisation](#personnalisation)
-- [Licence et crédits](#licence-et-crédits)
 
 ---
 
@@ -42,7 +43,7 @@ npm run build
 
 ## Connexion
 
-Au premier démarrage, Botcord affiche l'écran de connexion de Discord avec un champ **token**. Colle le token de ton bot (portail développeur Discord → ton application → *Bot* → *Reset Token*).
+Au premier démarrage, KahoCord affiche l'écran de connexion de Discord avec un champ **token**. Colle le token de ton bot (portail développeur Discord → ton application → *Bot* → *Reset Token*).
 
 > [!NOTE]
 > Active l'intent **Message Content** dans le portail développeur. Pour voir la liste des membres et leurs statuts, active aussi **Server Members** et **Presence**.
@@ -70,14 +71,6 @@ Toute l'identité de l'application (nom, auteur, dépôt GitHub, compte système
 
 Pour afficher ton propre avatar sur le compte système, renseigne `SystemUserId` et `SystemUserAvatar` avec l'ID et le hash d'avatar d'un compte Discord, puis renomme le dossier `src/AppCore/routes/users/<ID>` avec le même ID.
 
+Les logos sont dans `assets/brand/` : `wordmark.png` remplace le logo Discord complet, `mark.png` remplace le petit logo seul, `overrides/` contient les avatars par défaut redessinés et `assets/icon.png` est l'icône de l'application. Le remplacement est automatique : les SVG de Discord sont analysés et chaque logo détecté est remplacé, en gardant sa couleur.
+
 Le plugin Vencord qui ajoute la connexion par token est versionné dans `plugin/` et copié dans Vencord à chaque `npm run vencord`.
-
----
-
-## Licence et crédits
-
-Botcord est distribué sous licence **GPL-3.0** (voir [LICENSE](LICENSE)).
-
-C'est une version modifiée de [DiscordBotClient](https://github.com/aiko-chan-ai/DiscordBotClient) et de [VencordDBCPlugin](https://github.com/aiko-chan-ai/VencordDBCPlugin) par aiko-chan-ai. Le détail des modifications et les mentions de copyright d'origine sont dans [NOTICE.md](NOTICE.md).
-
-Merci également à [Vencord](https://github.com/Vendicated/Vencord), à [Discohook](https://github.com/discohook/discohook) et à [Lambert-server](https://github.com/SamuelScheit/Lambert-server).

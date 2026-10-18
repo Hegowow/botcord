@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from "electron";
 
 import { IPCEvent } from "./IPCEvents";
+import { startLogoObserver } from "./LogoObserver";
 
 type LogLevel = "log" | "info" | "warn" | "error" | "debug";
 
@@ -117,3 +118,5 @@ contextBridge.exposeInMainWorld("protoAPI", {
         ipcRenderer.on(IPCEvent.SetFrecencyUserSettings, (event, botId, settings) => listener(botId, settings));
     },
 });
+
+startLogoObserver();

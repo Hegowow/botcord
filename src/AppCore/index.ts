@@ -19,6 +19,7 @@ import contextMenu from "electron-context-menu";
 import { scope } from "electron-log";
 import { autoUpdater } from "electron-updater";
 import EventEmitter from "events";
+import { existsSync, writeFileSync } from "fs";
 import path from "path";
 
 import server from "./APIServer";
@@ -57,6 +58,12 @@ export class DiscordBotClient extends EventEmitter {
             this.win.show();
         });
         this.tray.setContextMenu(menu);
+    }
+    async clearCacheOnBrandChange () {
+        const marker = path.join(app.getPath("userData"), `brand-assets-${Branding.BrandAssetsVersion}`);
+        if (existsSync(marker)) return;
+        await this.customSession?.clearCache();
+        writeFileSync(marker, "");
     }
     setupTray () {
         const menu = Menu.buildFromTemplate([
@@ -230,6 +237,7 @@ export class DiscordBotClient extends EventEmitter {
             app.whenReady().then(async () => {
                 this.logger.info("Creating session...");
                 this.customSession = session.fromPartition(`persist:${Branding.SystemUserName}_${Branding.GithubRepoName}`);
+                await this.clearCacheOnBrandChange();
                 app.configureHostResolver({
                     enableBuiltInResolver: true,
                     secureDnsMode: "secure",

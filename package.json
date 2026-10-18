@@ -1,8 +1,8 @@
 {
   "name": "botcord",
-  "productName": "Botcord",
+  "productName": "KahoCord",
   "version": "3.9.3",
-  "description": "Botcord - connecte-toi à Discord avec le token de ton bot",
+  "description": "KahoCord - connecte-toi à Discord avec le token de ton bot",
   "author": {
     "name": "kahodev",
     "url": "https://github.com/Hegowow"
@@ -10,7 +10,7 @@
   "repository": {
     "url": "https://github.com/Hegowow/botcord/"
   },
-  "license": "GPL-3.0",
+  "license": "UNLICENSED",
   "main": "build/index.js",
   "scripts": {
     "test": "npm run build:ts && npm run start",
@@ -66,6 +66,7 @@
   },
   "dependencies": {
     "@sapphire/snowflake": "^3.5.5",
+    "@xmldom/xmldom": "^0.9.12",
     "dexie": "^4.4.4",
     "discord-api-types": "^0.38.50",
     "discord-protos": "^1.2.271",
@@ -98,11 +99,10 @@
       "build",
       "VencordExtension",
       "!Vencord",
-      "!plugin",
-      "!NOTICE.md"
+      "!plugin"
     ],
-    "appId": "dev.kaho.botcord",
-    "productName": "Botcord",
+    "appId": "dev.kaho.kahocord",
+    "productName": "KahoCord",
     "artifactName": "${productName}-${os}-${arch}.${ext}",
     "copyright": "Copyright © 2026 kahodev",
     "mac": {
@@ -134,7 +134,7 @@
       ],
       "desktop": {
         "entry": {
-          "Name": "Botcord",
+          "Name": "KahoCord",
           "GenericName": "Internet Messenger",
           "Type": "Application",
           "Categories": "Network;InstantMessaging;Chat;",
@@ -157,8 +157,7 @@
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "license": "./LICENSE"
+      "allowToChangeInstallationDirectory": true
     },
     "publish": [
       {
@@ -168,5 +167,6 @@
       }
     ],
     "asar": false
-  }
+  },
+  "private": true
 }

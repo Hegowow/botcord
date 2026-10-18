@@ -8,6 +8,7 @@ import path from "path";
 import { registerRoutesSync } from "src/AppUtils/RegisterRoutes";
 import Util from "src/AppUtils/Utils";
 
+import BrandedAssets from "./BrandedAssets";
 import Constants from "./Constants";
 
 const logger = scope("APIServer");
@@ -55,6 +56,8 @@ app.all("*", function (req, res, next) {
     req.headers = headers;
     next();
 });
+
+app.use(BrandedAssets);
 
 registerRoutesSync(app, path.resolve(__dirname, "routes"), ["/api/v10", "/api/v9", "/api"]);
 

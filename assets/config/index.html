@@ -2,7 +2,7 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<title>Botcord - Config Editor</title>
+		<title>KahoCord - Config Editor</title>
 		<style>
 			html,
 			body,
@@ -150,10 +150,10 @@
 				);
 				editor.onDidChangeModelContent(() => {
 					if (editor.getValue() === content) {
-						document.title = 'Botcord - Config Editor';
+						document.title = 'KahoCord - Config Editor';
 					} else {
 						document.title =
-							'Botcord - Config Editor (Unsaved Changes - Press Ctrl+S to save)';
+							'KahoCord - Config Editor (Unsaved Changes - Press Ctrl+S to save)';
 					}
 				});
 				// Ctrl+S
