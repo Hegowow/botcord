@@ -132,3 +132,4 @@ out
 .yarn/install-state.gz
 .pnp.*
 .playwright-mcp
+.DS_Store
