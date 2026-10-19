@@ -13,5 +13,5 @@ export default class Branding extends null {
     static ProfileBio = "Propulsé par KahoCord, by kahodev";
     static SessionLocation = "kahodev HQ";
     static AccentColor = 0x5865f2;
-    static BrandAssetsVersion = 2;
+    static BrandAssetsVersion = 3;
 }

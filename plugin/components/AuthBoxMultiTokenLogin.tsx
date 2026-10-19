@@ -10,7 +10,7 @@ export const multiTokenState = { value: "" };
 
 export default function AuthBoxMultiTokenLogin() {
     const [state, setState] = useState("");
-    const [mode, setMode] = useState<AccountMode>(accountModeState.value);
+    const [mode, setMode] = useState<AccountMode>(accountModeState.value === "user-login" ? "user" : accountModeState.value);
     const labels = tokenLabels[mode];
 
     useEffect(() => {
@@ -46,6 +46,7 @@ export default function AuthBoxMultiTokenLogin() {
                     </div>
                 </div>
                 <AccountTypeSelect
+                    includeCredentialLogin={false}
                     value={mode}
                     onChange={value => {
                         accountModeState.value = value;

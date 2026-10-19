@@ -134,7 +134,7 @@ export default definePlugin({
         CONNECTION_OPEN() {
             const user = UserStore.getCurrentUser();
             if (!user) return;
-            registerClient(user.id, window.BotClientNative?.getAccountMode?.() !== "user");
+            registerClient(user.id, (window.BotClientNative?.getAccountMode?.() ?? "bot") === "bot");
         },
     },
     start() {

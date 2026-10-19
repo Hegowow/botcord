@@ -5,12 +5,18 @@ import { Select } from "@webpack/common";
 import { AccountMode } from "../utils/accountMode";
 import { cl } from "./AuthBoxTokenLogin";
 
-const options = [
+const allOptions: { label: string; value: AccountMode; }[] = [
     { label: "Bot", value: "bot" },
-    { label: "Compte personnel", value: "user" },
+    { label: "User", value: "user" },
+    { label: "User (login)", value: "user-login" },
 ];
 
-export default function AccountTypeSelect({ value, onChange }: { value: AccountMode; onChange(mode: AccountMode): void; }) {
+export default function AccountTypeSelect({ value, onChange, includeCredentialLogin = true }: {
+    value: AccountMode;
+    onChange(mode: AccountMode): void;
+    includeCredentialLogin?: boolean;
+}) {
+    const options = includeCredentialLogin ? allOptions : allOptions.filter(option => option.value !== "user-login");
     return (
         <div className={Margins.bottom20}>
             <h5 className={classes(cl("h5"), cl("defaultMarginh5"))}>Type de compte</h5>

@@ -44,10 +44,11 @@ npm run build
 
 ## Connexion
 
-L'écran de connexion de Discord affiche un champ **token** et, juste au-dessus du bouton **Connexion**, un menu **Type de compte** :
+L'écran de connexion de Discord affiche un menu **Type de compte** au-dessus du bouton **Connexion** :
 
 - **Bot** : colle le token de ton bot (portail développeur Discord → ton application → *Bot* → *Reset Token*). KahoCord adapte l'interface aux limites des bots (faux profils, liste des membres reconstruite, éditeur d'embeds, etc.).
-- **Compte personnel** : colle le token de ton propre compte. KahoCord laisse alors passer toutes les requêtes telles quelles vers Discord, sans aucune modification propre aux bots.
+- **User** : colle le token de ton propre compte. KahoCord laisse alors passer toutes les requêtes telles quelles vers Discord, sans aucune modification propre aux bots.
+- **User (login)** : affiche le formulaire de connexion d'origine de Discord (e-mail ou téléphone + mot de passe, double authentification) et le QR code de connexion rapide à scanner avec l'application mobile.
 
 Changer de type de compte recharge l'application. Le dernier type choisi est mémorisé.
 

@@ -25,3 +25,7 @@
 .vc-bot-client-auth-box-token-login-errorSeparator {
     padding-inline: 4px
 }
+
+.vc-bot-client-auth-box-token-login-token-form ~ * {
+    display: none !important;
+}

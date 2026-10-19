@@ -36,7 +36,7 @@ import AuthBoxMultiTokenLogin, { multiTokenState } from "./components/AuthBoxMul
 import AuthBoxTokenLogin from "./components/AuthBoxTokenLogin";
 import { IconEmbedSvg } from "./icon.svg";
 import type { EmojiGuildData, Group, List, MemberPatch, OpItem, Ops } from "./typing/index.d.ts";
-import { accountModeState, isBotMode, loginWithToken, normalizeToken } from "./utils/accountMode";
+import { accountModeState, isBotMode, isCredentialLoginMode, loginWithToken, normalizeToken } from "./utils/accountMode";
 import { buildDiscordAPIErrorMessage, originalSessionStorage, RegExToken } from "./utils/common";
 import db from "./utils/database";
 import { hasEmbedPerms } from "./utils/fakeNitroPlugin";
@@ -409,7 +409,7 @@ export default definePlugin({
             replacement: [
                 {
                     match: /(?<=\{className:\i\.\i,)children:\[(?=\(0,\i\.\i\)\(\i\.\i,\{alpha2:)/,
-                    replace: "children:[$self.renderTokenLogin()],children_:[",
+                    replace: "children:[$self.renderTokenLogin(),",
                 },
             ],
         },
@@ -417,7 +417,7 @@ export default definePlugin({
             find: "https://discord.com/ra/",
             replacement: {
                 match: /(function \i\(\i\)\{)(?=let\{onAuthenticateSuccess:)/,
-                replace: "$1return null;",
+                replace: "$1if(!$self.credentialLoginEnabled)return null;",
             },
         },
         {
@@ -1290,6 +1290,7 @@ export default definePlugin({
 
         return true;
     },
+    credentialLoginEnabled: isCredentialLoginMode,
     renderTokenLogin() {
         return (
             <ErrorBoundary noop>

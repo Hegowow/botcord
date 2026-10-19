@@ -6,7 +6,7 @@ import { classes } from "@utils/misc";
 import { findByPropsLazy, findCssClassesLazy } from "@webpack";
 import { useState } from "@webpack/common";
 
-import { AccountMode, accountModeState, loginWithToken, normalizeToken } from "../utils/accountMode";
+import { AccountMode, accountModeState, isCredentialLoginMode, loginWithToken, normalizeToken, startupAccountMode, switchLoginMode } from "../utils/accountMode";
 import { RegExToken } from "../utils/common";
 import AccountTypeSelect from "./AccountTypeSelect";
 
@@ -29,16 +29,29 @@ export const contentModule = findCssClassesLazy(
 export const tokenLabels: Record<AccountMode, { title: string; placeholder: string; }> = {
     bot: { title: "Token du bot", placeholder: "Colle le token de ton bot" },
     user: { title: "Token du compte", placeholder: "Colle le token de ton compte Discord" },
+    "user-login": { title: "Token du compte", placeholder: "Colle le token de ton compte Discord" },
 };
 
+function CredentialLoginModeSelect() {
+    return (
+        <div className={classes(authBoxModule.block, Margins.top20)}>
+            <AccountTypeSelect value={startupAccountMode} onChange={switchLoginMode} />
+        </div>
+    );
+}
+
 export default function AuthBoxTokenLogin() {
+    return isCredentialLoginMode ? <CredentialLoginModeSelect /> : <TokenLoginForm />;
+}
+
+function TokenLoginForm() {
     const [state, setState] = useState("");
     const [mode, setMode] = useState<AccountMode>(accountModeState.value);
     const [error, setError] = useState<string>();
     const labels = tokenLabels[mode];
     return (
         <>
-            <div className={classes(authBoxModule.block, Margins.top20)}>
+            <div className={classes(authBoxModule.block, Margins.top20, cl("token-form"))}>
                 <div className={Margins.bottom20}>
                     <h5
                         className={classes(cl("h5"), cl("defaultMarginh5"), error && cl("error"))}
@@ -71,6 +84,7 @@ export default function AuthBoxTokenLogin() {
                 <AccountTypeSelect
                     value={mode}
                     onChange={value => {
+                        if (value === "user-login") return switchLoginMode(value);
                         accountModeState.value = value;
                         setMode(value);
                         setError(undefined);
