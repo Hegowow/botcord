@@ -8,6 +8,8 @@ export class IPCEvent extends null {
     static GetBotInfo = "app:preload:get_bot_info";
     static GetVersion = "app:preload:get_version";
     static GetName = "app:preload:get_name";
+    static GetAccountMode = "app:preload:get_account_mode";
+    static SetAccountMode = "app:preload:set_account_mode";
     static GetExperiment = "app:preload:get_experiment";
     static GetDefaultUserPatch = "app:preload:get_default_user_patch";
     static LogFromMainProcess = "app:main:log";

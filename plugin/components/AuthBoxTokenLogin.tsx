@@ -6,7 +6,9 @@ import { classes } from "@utils/misc";
 import { findByPropsLazy, findCssClassesLazy } from "@webpack";
 import { useState } from "@webpack/common";
 
-import { originalSessionStorage, RegExToken } from "../utils/common";
+import { AccountMode, accountModeState, loginWithToken, normalizeToken } from "../utils/accountMode";
+import { RegExToken } from "../utils/common";
+import AccountTypeSelect from "./AccountTypeSelect";
 
 export const cl = classNameFactory("vc-bot-client-auth-box-token-login-");
 
@@ -24,11 +26,16 @@ export const contentModule = findCssClassesLazy(
     "contents",
 );
 
-const LoginToken = findByPropsLazy("loginToken", "login");
+export const tokenLabels: Record<AccountMode, { title: string; placeholder: string; }> = {
+    bot: { title: "Token du bot", placeholder: "Colle le token de ton bot" },
+    user: { title: "Token du compte", placeholder: "Colle le token de ton compte Discord" },
+};
 
 export default function AuthBoxTokenLogin() {
     const [state, setState] = useState("");
+    const [mode, setMode] = useState<AccountMode>(accountModeState.value);
     const [error, setError] = useState<string>();
+    const labels = tokenLabels[mode];
     return (
         <>
             <div className={classes(authBoxModule.block, Margins.top20)}>
@@ -36,7 +43,7 @@ export default function AuthBoxTokenLogin() {
                     <h5
                         className={classes(cl("h5"), cl("defaultMarginh5"), error && cl("error"))}
                     >
-                        Bot Token
+                        {labels.title}
                         {error ? (
                             <span className={cl("errorMessage")}>
                                 <span className={cl("errorSeparator")}>-</span>
@@ -49,10 +56,10 @@ export default function AuthBoxTokenLogin() {
                             className={classes(inputModule.inputDefault, error && inputModule.inputError)}
                             name="token"
                             type="password"
-                            placeholder="Enter your bot token"
+                            placeholder={labels.placeholder}
                             aria-label="Token"
                             autoComplete="off"
-                            maxLength={100}
+                            maxLength={200}
                             spellCheck="false"
                             value={state}
                             onChange={ev => {
@@ -61,20 +68,27 @@ export default function AuthBoxTokenLogin() {
                         />
                     </div>
                 </div>
+                <AccountTypeSelect
+                    value={mode}
+                    onChange={value => {
+                        accountModeState.value = value;
+                        setMode(value);
+                        setError(undefined);
+                    }}
+                />
                 <button
                     type="submit"
                     className={classes(Margins.bottom8, contentModule.button, contentModule.lookFilled, contentModule.colorBrand, contentModule.sizeLarge, contentModule.fullWidth, contentModule.grow)}
                     onClick={ev => {
                         ev.preventDefault();
-                        if (!RegExToken.test(state.trim())) {
-                            setError("Invalid token");
+                        if (!RegExToken.test(normalizeToken(state, mode))) {
+                            setError("Token invalide");
                             return;
                         }
-                        originalSessionStorage.setItem("currentShard", "0");
-                        LoginToken.loginToken(state);
+                        loginWithToken(state, mode);
                     }}
                 >
-                    <div className={contentModule.contents}>Login</div>
+                    <div className={contentModule.contents}>Connexion</div>
                 </button>
             </div>
         </>

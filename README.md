@@ -43,13 +43,18 @@ npm run build
 
 ## Connexion
 
-Au premier démarrage, KahoCord affiche l'écran de connexion de Discord avec un champ **token**. Colle le token de ton bot (portail développeur Discord → ton application → *Bot* → *Reset Token*).
+L'écran de connexion de Discord affiche un champ **token** et, juste au-dessus du bouton **Connexion**, un menu **Type de compte** :
+
+- **Bot** : colle le token de ton bot (portail développeur Discord → ton application → *Bot* → *Reset Token*). KahoCord adapte l'interface aux limites des bots (faux profils, liste des membres reconstruite, éditeur d'embeds, etc.).
+- **Compte personnel** : colle le token de ton propre compte. KahoCord laisse alors passer toutes les requêtes telles quelles vers Discord, sans aucune modification propre aux bots.
+
+Changer de type de compte recharge l'application. Le dernier type choisi est mémorisé.
 
 > [!NOTE]
-> Active l'intent **Message Content** dans le portail développeur. Pour voir la liste des membres et leurs statuts, active aussi **Server Members** et **Presence**.
+> Pour un bot, active l'intent **Message Content** dans le portail développeur. Pour voir la liste des membres et leurs statuts, active aussi **Server Members** et **Presence**.
 
 > [!CAUTION]
-> Ton token donne un contrôle total sur ton bot. Ne le partage jamais. Il reste stocké localement sur ta machine.
+> Un token donne un contrôle total sur le compte. Ne le partage jamais. Utiliser un client modifié avec un compte personnel est contraire aux conditions d'utilisation de Discord.
 
 ---
 

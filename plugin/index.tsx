@@ -36,6 +36,7 @@ import AuthBoxMultiTokenLogin, { multiTokenState } from "./components/AuthBoxMul
 import AuthBoxTokenLogin from "./components/AuthBoxTokenLogin";
 import { IconEmbedSvg } from "./icon.svg";
 import type { EmojiGuildData, Group, List, MemberPatch, OpItem, Ops } from "./typing/index.d.ts";
+import { accountModeState, isBotMode, loginWithToken, normalizeToken } from "./utils/accountMode";
 import { buildDiscordAPIErrorMessage, originalSessionStorage, RegExToken } from "./utils/common";
 import db from "./utils/database";
 import { hasEmbedPerms } from "./utils/fakeNitroPlugin";
@@ -391,7 +392,7 @@ const settings = definePluginSettings({
 
 export default definePlugin({
     name: "BotClient",
-    description: "Patch the current version of Discord to allow the use of bot accounts",
+    description: "Connexion par token (bot ou compte personnel) pour KahoCord",
     authors: [
         {
             name: "kahodev",
@@ -451,6 +452,7 @@ export default definePlugin({
                 },
             ],
         },
+        ...(isBotMode ? [
         {
             find: "unranked_game_entries.map",
             replacement: [
@@ -708,8 +710,9 @@ export default definePlugin({
                 },
             ],
         },
+        ] : []),
     ],
-    commands: [
+    commands: isBotMode ? [
         {
             name: "ping",
             description: "Ping pong!",
@@ -885,8 +888,8 @@ export default definePlugin({
                 }
             },
         },
-    ],
-    flux: {
+    ] : [],
+    flux: isBotMode ? {
         GUILD_MEMBER_LIST_UPDATE(data) {
             BotClientLogger.debug(
                 "botClient#updateGuildMembersList()",
@@ -933,7 +936,7 @@ export default definePlugin({
                 funcUpdateGuildMembersList?.("GuildRoleDelete", data);
             }
         },
-    },
+    } : {},
     dynamicPatchModules() {
         const RelationshipsModule = findByProps("fetchRelationships", "sendRequest", "removeFriend");
         const methodsToBlock = [
@@ -1038,15 +1041,16 @@ export default definePlugin({
             return Promise.reject(`${window.BotClientNative.getBotClientName()} cannot use Guild Templates`);
         };
     },
-    chatBarButton: {
+    chatBarButton: isBotMode ? {
         icon: IconEmbedSvg,
         render: CreateAdvancedMessageEditor,
-    },
-    messagePopoverButton: {
+    } : undefined,
+    messagePopoverButton: isBotMode ? {
         icon: IconEmbedSvg,
         render: EditAdvancedMessageEditor,
-    },
+    } : undefined,
     start() {
+        if (!isBotMode) return;
         this.dynamicPatchModules();
 
         updateGuildMembersListDirect = this.updateGuildMembersList.bind(this);
@@ -1058,6 +1062,7 @@ export default definePlugin({
         this.applyGlobalPatches();
     },
     stop() {
+        if (!isBotMode) return;
         if (currentMessageHandler) {
             window.removeEventListener("message", currentMessageHandler);
             currentMessageHandler = null;
@@ -1305,13 +1310,12 @@ export default definePlugin({
         e.preventDefault();
         const state = multiTokenState.value;
         if (!state) return;
-        if (!RegExToken.test(state.trim())) {
-            showToast("Login Failure: Invalid token", Toasts.Type.FAILURE);
-            BotClientLogger.error("Login Failure: Invalid token", state);
+        const mode = accountModeState.value;
+        if (!RegExToken.test(normalizeToken(state, mode))) {
+            showToast("Connexion impossible : token invalide", Toasts.Type.FAILURE);
             return;
         }
-        originalSessionStorage.setItem("currentShard", "0");
-        LoginToken.loginToken(state);
+        loginWithToken(state, mode);
     },
     async fixPreloadedUserSettings() {
         let userId = GetApplicationId.getId();

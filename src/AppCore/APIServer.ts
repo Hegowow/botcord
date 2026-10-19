@@ -8,6 +8,7 @@ import path from "path";
 import { registerRoutesSync } from "src/AppUtils/RegisterRoutes";
 import Util from "src/AppUtils/Utils";
 
+import AccountMode from "./AccountMode";
 import BrandedAssets from "./BrandedAssets";
 import Constants from "./Constants";
 
@@ -45,7 +46,9 @@ app.all("*", function (req, res, next) {
             headers[key] = req.headers[key];
         }
     });
-    if (req.headers.authorization) {
+    if (req.headers.authorization && AccountMode.isUser) {
+        headers.authorization = req.headers.authorization.trim();
+    } else if (req.headers.authorization) {
         if (!req.headers.authorization.toLowerCase().startsWith("bot ")) {
             headers.authorization = `Bot ${req.headers.authorization.trim()}`;
         } else {
@@ -58,6 +61,11 @@ app.all("*", function (req, res, next) {
 });
 
 app.use(BrandedAssets);
+
+app.use((req, res, next) => {
+    if (AccountMode.isUser && req.originalUrl.includes("/api/")) return Util.proxy(req, res);
+    next();
+});
 
 registerRoutesSync(app, path.resolve(__dirname, "routes"), ["/api/v10", "/api/v9", "/api"]);
 

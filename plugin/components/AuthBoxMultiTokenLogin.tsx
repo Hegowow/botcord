@@ -2,12 +2,16 @@ import { Margins } from "@utils/margins";
 import { classes } from "@utils/misc";
 import { useEffect, useState } from "@webpack/common";
 
-import { authBoxModule, cl, inputModule } from "./AuthBoxTokenLogin";
+import { AccountMode, accountModeState } from "../utils/accountMode";
+import AccountTypeSelect from "./AccountTypeSelect";
+import { authBoxModule, cl, inputModule, tokenLabels } from "./AuthBoxTokenLogin";
 
 export const multiTokenState = { value: "" };
 
 export default function AuthBoxMultiTokenLogin() {
     const [state, setState] = useState("");
+    const [mode, setMode] = useState<AccountMode>(accountModeState.value);
+    const labels = tokenLabels[mode];
 
     useEffect(() => {
         multiTokenState.value = "";
@@ -21,17 +25,17 @@ export default function AuthBoxMultiTokenLogin() {
             <div className={classes(authBoxModule.block, Margins.top20)}>
                 <div className={Margins.bottom20}>
                     <h5 className={classes(cl("h5"), cl("defaultMarginh5"))}>
-                        Bot Token
+                        {labels.title}
                     </h5>
                     <div className={inputModule.inputWrapper}>
                         <input
                             className={inputModule.inputDefault}
                             name="token"
                             type="password"
-                            placeholder="Enter your bot token"
+                            placeholder={labels.placeholder}
                             aria-label="Token"
                             autoComplete="off"
-                            maxLength={100}
+                            maxLength={200}
                             spellCheck="false"
                             value={state}
                             onChange={ev => {
@@ -41,6 +45,13 @@ export default function AuthBoxMultiTokenLogin() {
                         />
                     </div>
                 </div>
+                <AccountTypeSelect
+                    value={mode}
+                    onChange={value => {
+                        accountModeState.value = value;
+                        setMode(value);
+                    }}
+                />
             </div>
         </>
     );

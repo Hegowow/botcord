@@ -4,6 +4,7 @@ import { ApplicationFlagsBitField, IntentsBitField } from "src/AppUtils/DiscordB
 import { ApexExperiment, GuildExperiment, UserExperiment } from "src/AppUtils/Experiments";
 
 import { DiscordBotClient } from ".";
+import AccountMode, { type AccountMode as AccountModeValue } from "./AccountMode";
 import Constants from "./Constants";
 import { IPCEvent } from "./IPCEvents";
 
@@ -122,6 +123,12 @@ export function setupIPCEvents (mainApp: DiscordBotClient) {
         })
         .on(IPCEvent.GetName, event => {
             return (event.returnValue = app.getName());
+        })
+        .on(IPCEvent.GetAccountMode, event => {
+            return (event.returnValue = AccountMode.current);
+        })
+        .on(IPCEvent.SetAccountMode, (event, mode: AccountModeValue) => {
+            return (event.returnValue = AccountMode.set(mode));
         })
         .on(IPCEvent.GetExperiment, (event, type, botId, allData) => {
             if (type === "user") {
