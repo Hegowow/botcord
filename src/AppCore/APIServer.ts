@@ -46,14 +46,12 @@ app.all("*", function (req, res, next) {
             headers[key] = req.headers[key];
         }
     });
-    if (req.headers.authorization && AccountMode.isUser) {
-        headers.authorization = req.headers.authorization.trim();
-    } else if (req.headers.authorization) {
-        if (!req.headers.authorization.toLowerCase().startsWith("bot ")) {
-            headers.authorization = `Bot ${req.headers.authorization.trim()}`;
-        } else {
-            headers.authorization = req.headers.authorization.trim();
-        }
+    const token = req.headers.authorization?.trim().replace(/^Bot\s+/i, "");
+    req.accountMode = AccountMode.requestMode(token ? Util.getIDFromToken(token) : null);
+    if (token && req.accountMode !== "bot") {
+        headers.authorization = token;
+    } else if (token) {
+        headers.authorization = `Bot ${token}`;
         headers["user-agent"] = Constants.UserAgentDiscordBot;
     }
     req.headers = headers;
@@ -63,7 +61,7 @@ app.all("*", function (req, res, next) {
 app.use(BrandedAssets);
 
 app.use((req, res, next) => {
-    if (AccountMode.isUser && req.originalUrl.includes("/api/")) return Util.proxy(req, res);
+    if (req.accountMode !== "bot" && req.originalUrl.includes("/api/")) return Util.proxy(req, res);
     next();
 });
 

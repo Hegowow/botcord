@@ -8,21 +8,43 @@ import { authBoxModule, cl, inputModule, tokenLabels } from "./AuthBoxTokenLogin
 
 export const multiTokenState = { value: "" };
 
+const CredentialLoginClass = "vc-kc-credential-login";
+
 export default function AuthBoxMultiTokenLogin() {
     const [state, setState] = useState("");
-    const [mode, setMode] = useState<AccountMode>(accountModeState.value === "user-login" ? "user" : accountModeState.value);
+    const [mode, setMode] = useState<AccountMode>(accountModeState.value);
     const labels = tokenLabels[mode];
+    const credentialLogin = mode === "user-login";
 
     useEffect(() => {
         multiTokenState.value = "";
         return () => {
             multiTokenState.value = "";
+            document.body.classList.remove(CredentialLoginClass);
         };
     }, []);
 
+    useEffect(() => {
+        document.body.classList.toggle(CredentialLoginClass, credentialLogin);
+    }, [credentialLogin]);
+
+    const select = (
+        <AccountTypeSelect
+            value={mode}
+            onChange={value => {
+                accountModeState.value = value;
+                setMode(value);
+            }}
+        />
+    );
+
+    if (credentialLogin) {
+        return <div className={classes(authBoxModule.block, Margins.top20)}>{select}</div>;
+    }
+
     return (
         <>
-            <div className={classes(authBoxModule.block, Margins.top20)}>
+            <div className={classes(authBoxModule.block, Margins.top20, cl("token-form"))}>
                 <div className={Margins.bottom20}>
                     <h5 className={classes(cl("h5"), cl("defaultMarginh5"))}>
                         {labels.title}
@@ -45,14 +67,7 @@ export default function AuthBoxMultiTokenLogin() {
                         />
                     </div>
                 </div>
-                <AccountTypeSelect
-                    includeCredentialLogin={false}
-                    value={mode}
-                    onChange={value => {
-                        accountModeState.value = value;
-                        setMode(value);
-                    }}
-                />
+                {select}
             </div>
         </>
     );

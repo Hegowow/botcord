@@ -56,6 +56,12 @@ contextBridge.exposeInMainWorld("BotClientNative", {
     setAccountMode (mode: "bot" | "user" | "user-login") {
         return ipcRenderer.sendSync(IPCEvent.SetAccountMode, mode);
     },
+    getAccountModeFor (userId: string) {
+        return ipcRenderer.sendSync(IPCEvent.GetAccountModeFor, userId);
+    },
+    rememberAccountMode (userId: string, mode: "bot" | "user" | "user-login") {
+        return ipcRenderer.sendSync(IPCEvent.RememberAccountMode, userId, mode);
+    },
     getPrivateChannelDefault () {
         return {
             type: 1,

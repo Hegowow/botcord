@@ -36,7 +36,7 @@ import AuthBoxMultiTokenLogin, { multiTokenState } from "./components/AuthBoxMul
 import AuthBoxTokenLogin from "./components/AuthBoxTokenLogin";
 import { IconEmbedSvg } from "./icon.svg";
 import type { EmojiGuildData, Group, List, MemberPatch, OpItem, Ops } from "./typing/index.d.ts";
-import { accountModeState, isBotMode, isCredentialLoginMode, loginWithToken, normalizeToken } from "./utils/accountMode";
+import { accountModeState, handleAccountSwitch, isBotMode, isCredentialLoginMode, normalizeToken, rememberAccount, startupAccountMode, switchToToken } from "./utils/accountMode";
 import { buildDiscordAPIErrorMessage, originalSessionStorage, RegExToken } from "./utils/common";
 import db from "./utils/database";
 import { hasEmbedPerms } from "./utils/fakeNitroPlugin";
@@ -425,19 +425,24 @@ export default definePlugin({
             replacement: [
                 {
                     match: /children:\[(?=\(0,[\w.]+\)\([\w.]+,{alpha2:)/,
-                    replace: function (str, ...args) {
-                        return "children:[$self.renderTokenLoginMultiAccount()],children_:[";
-                    },
+                    replace: "children:[$self.renderTokenLoginMultiAccount(),",
                 },
                 {
                     match: "onClick:this.handleLogin,",
-                    replace: "onClick:$self.validateTokenAndLogin,onClick_:this.handleLogin,",
+                    replace: "onClick:e=>$self.validateTokenAndLogin(e,this.handleLogin),",
                 },
                 {
-                    match: /(this\.renderDefaultForm\(\)),[^\]]*?isMultiAccount:!0\}\)(?=\])/,
-                    replace: "$1",
+                    match: /(this\.renderDefaultForm\(\)),([^\]]*?isMultiAccount:!0\}\))(?=\])/,
+                    replace: "$1,$self.wrapMultiAccountQr($2)",
                 },
             ],
+        },
+        {
+            find: '"Switching accounts"',
+            replacement: {
+                match: /switchAccountToken\((\i)\)\{/,
+                replace: "$&if($self.handleAccountSwitch($1))return Promise.resolve(!0);",
+            },
         },
         {
             find: "hasFetchedCredentials(){",
@@ -887,7 +892,11 @@ export default definePlugin({
             },
         },
     ] : [],
-    flux: isBotMode ? {
+    flux: {
+        CONNECTION_OPEN() {
+            rememberAccount(UserStore.getCurrentUser()?.id, startupAccountMode);
+        },
+        ...(isBotMode ? {
         GUILD_MEMBER_LIST_UPDATE(data) {
             BotClientLogger.debug(
                 "botClient#updateGuildMembersList()",
@@ -934,7 +943,8 @@ export default definePlugin({
                 funcUpdateGuildMembersList?.("GuildRoleDelete", data);
             }
         },
-    } : {},
+    } : {}),
+    },
     dynamicPatchModules() {
         const RelationshipsModule = findByProps("fetchRelationships", "sendRequest", "removeFriend");
         const methodsToBlock = [
@@ -1305,16 +1315,21 @@ export default definePlugin({
             </ErrorBoundary>
         );
     },
-    validateTokenAndLogin(e) {
+    handleAccountSwitch,
+    wrapMultiAccountQr(element: React.ReactNode) {
+        return <div className="vc-kc-multi-account-qr" style={{ display: "contents" }}>{element}</div>;
+    },
+    validateTokenAndLogin(e, originalHandleLogin?: (event: unknown) => unknown) {
+        const mode = accountModeState.value;
+        if (mode === "user-login" && originalHandleLogin) return originalHandleLogin(e);
         e.preventDefault();
         const state = multiTokenState.value;
         if (!state) return;
-        const mode = accountModeState.value;
         if (!RegExToken.test(normalizeToken(state, mode))) {
             showToast("Connexion impossible : token invalide", Toasts.Type.FAILURE);
             return;
         }
-        loginWithToken(state, mode);
+        switchToToken(state, mode);
     },
     async fixPreloadedUserSettings() {
         let userId = GetApplicationId.getId();

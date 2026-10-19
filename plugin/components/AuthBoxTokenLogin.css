@@ -29,3 +29,7 @@
 .vc-bot-client-auth-box-token-login-token-form ~ * {
     display: none !important;
 }
+
+body:not(.vc-kc-credential-login) .vc-kc-multi-account-qr {
+    display: none !important;
+}

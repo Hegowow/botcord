@@ -130,6 +130,13 @@ export function setupIPCEvents (mainApp: DiscordBotClient) {
         .on(IPCEvent.SetAccountMode, (event, mode: AccountModeValue) => {
             return (event.returnValue = AccountMode.set(mode));
         })
+        .on(IPCEvent.GetAccountModeFor, (event, userId: string) => {
+            return (event.returnValue = AccountMode.modeFor(userId));
+        })
+        .on(IPCEvent.RememberAccountMode, (event, userId: string, mode: AccountModeValue) => {
+            AccountMode.remember(userId, mode);
+            return (event.returnValue = true);
+        })
         .on(IPCEvent.GetExperiment, (event, type, botId, allData) => {
             if (type === "user") {
                 event.returnValue = UserExperiment(allData, botId);
