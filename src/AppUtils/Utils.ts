@@ -3,7 +3,6 @@ import { net } from "electron";
 import express from "express";
 import multer from "multer";
 import selfsigned from "selfsigned";
-import Branding from "src/AppCore/Branding";
 import GlobalConfig from "src/AppCore/Config";
 import Constants from "src/AppCore/Constants";
 
@@ -17,7 +16,6 @@ export default class Util {
         guildId: string | null = null,
         injectUserBio: string | null = null,
     ) {
-        const fakeBio = Branding.ProfileBio;
         const flags = new UserFlagsBitField(userData.flags);
         const badges: object[] = [];
         flags.toArray().map(element => {
@@ -45,9 +43,6 @@ export default class Util {
                     UserBadges.Gifting,
                 );
             }
-        }
-        if (!injectUserBio && GlobalConfig.config.generate_fake_profile) {
-            injectUserBio = fakeBio;
         }
         let guildMemberProfileBio = null;
         if (guildMember && "bio" in guildMember && guildMember.bio) {
