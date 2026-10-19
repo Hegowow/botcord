@@ -12,7 +12,7 @@ interface PickerChoice {
     audio: boolean;
 }
 
-const pendingPicks = new Map<string, (choice: PickerChoice) => void>();
+const pendingPicks = new Map<string, { senderId: number; resolve(choice: PickerChoice): void; }>();
 const readyRenderers = new Set<number>();
 const trackedRenderers = new Set<number>();
 
@@ -28,9 +28,11 @@ ipcMain.on(IPCEvent.ScreenSharePickerReady, event => {
     });
 });
 
-ipcMain.on(IPCEvent.ScreenSharePickResponse, (_event, requestId: string, sourceId: string | null, audio: boolean) => {
-    pendingPicks.get(requestId)?.({ sourceId, audio: audio === true });
+ipcMain.on(IPCEvent.ScreenSharePickResponse, (event, requestId: string, sourceId: string | null, audio: boolean) => {
+    const pending = pendingPicks.get(requestId);
+    if (!pending || pending.senderId !== event.sender.id || event.senderFrame !== event.sender.mainFrame) return;
     pendingPicks.delete(requestId);
+    pending.resolve({ sourceId: typeof sourceId === "string" ? sourceId : null, audio: audio === true });
 });
 
 async function askMacMediaAccess (mediaTypes: string[]) {
@@ -58,9 +60,12 @@ function askRenderer (window: BrowserWindow, sources: DesktopCapturerSource[], a
             pendingPicks.delete(requestId);
             resolve({ sourceId: null, audio: false });
         }, pickerTimeoutMs);
-        pendingPicks.set(requestId, choice => {
-            clearTimeout(timer);
-            resolve(choice);
+        pendingPicks.set(requestId, {
+            senderId: window.webContents.id,
+            resolve: choice => {
+                clearTimeout(timer);
+                resolve(choice);
+            },
         });
         window.webContents.send(IPCEvent.ScreenSharePickRequest, requestId, sources.map(serializeSource), audioSupported);
     });

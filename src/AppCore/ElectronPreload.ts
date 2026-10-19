@@ -40,6 +40,8 @@ window.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+let screenSharePickerRegistered = false;
+
 contextBridge.exposeInMainWorld("BotClientNative", {
     getBotInfo: (token: string) => {
         return ipcRenderer.invoke(IPCEvent.GetBotInfo, token);
@@ -63,9 +65,11 @@ contextBridge.exposeInMainWorld("BotClientNative", {
         return ipcRenderer.sendSync(IPCEvent.RememberAccountMode, userId, mode);
     },
     onScreenSharePickRequest (listener: (requestId: string, sources: unknown[], audioSupported: boolean) => void) {
-        ipcRenderer.removeAllListeners(IPCEvent.ScreenSharePickRequest);
+        if (screenSharePickerRegistered) return false;
+        screenSharePickerRegistered = true;
         ipcRenderer.on(IPCEvent.ScreenSharePickRequest, (_event, requestId, sources, audioSupported) => listener(requestId, sources, audioSupported));
         ipcRenderer.send(IPCEvent.ScreenSharePickerReady);
+        return true;
     },
     respondScreenSharePick (requestId: string, sourceId: string | null, audio: boolean) {
         ipcRenderer.send(IPCEvent.ScreenSharePickResponse, requestId, sourceId, audio);
