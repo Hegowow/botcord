@@ -34,6 +34,7 @@ let clientIds = new Set<string>();
 let adminKey = "";
 let admin: AdminSession = { status: "none" };
 let refreshTimer: ReturnType<typeof setInterval> | null = null;
+let eventSource: EventSource | null = null;
 const listeners = new Set<() => void>();
 
 const notify = () => listeners.forEach(listener => listener());
@@ -108,14 +109,30 @@ export async function refresh () {
     }
 }
 
+function listenForChanges () {
+    if (eventSource || typeof EventSource === "undefined") return;
+    eventSource = new EventSource(`${ApiUrl}/v1/events`);
+    eventSource.addEventListener("state", event => {
+        try {
+            const { revision } = JSON.parse((event as MessageEvent).data);
+            if (revision !== state?.revision) refresh();
+        } catch {
+            refresh();
+        }
+    });
+}
+
 export function startRefreshing () {
     refresh();
     refreshTimer ??= setInterval(refresh, RefreshIntervalMs);
+    listenForChanges();
 }
 
 export function stopRefreshing () {
     if (refreshTimer) clearInterval(refreshTimer);
     refreshTimer = null;
+    eventSource?.close();
+    eventSource = null;
 }
 
 export async function registerClient (userId: string, bot: boolean) {

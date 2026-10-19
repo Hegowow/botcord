@@ -29,8 +29,21 @@ const tenureTiers: [number, string, string][] = [
     [24, "Diamant", "0d61871f72bb9a33a7ae568c1fb4f20a"],
     [36, "Émeraude", "11e2d339068b55d3a506cff34d3780f3"],
     [60, "Rubis", "cd5e2cfd9d7f27a8cdcd3e8a8d5dc9f4"],
-    [72, "Feu", "5b154df19c53dce2af92c9b61e6be5e2"],
+    [72, "Opale", "5b154df19c53dce2af92c9b61e6be5e2"],
 ];
+
+const giftingTiers: [string, string, number, string][] = [
+    ["patron", "Patron", 1, "ac305d1b9481f312ce4419e7f8296558"],
+    ["champion", "Champion", 2, "8b7792c4f65953d3ff564f23429cb79e"],
+    ["luminary", "Luminary", 3, "3119f5504b2cd09576a323908c7c3517"],
+    ["icon", "Icon", 6, "64f2413c9b9803661322aaad25826b62"],
+    ["hero", "Hero", 10, "77d65b1f210014a11eb1582ee06ab684"],
+    ["legend", "Legend", 20, "7fe346cfc5da1340087d8759a9e7a395"],
+];
+
+export const renamedDiscordBadges: Record<string, string> = {
+    gifting: "gifting_champion",
+};
 
 export const discordBadges: DiscordBadgeSeed[] = [
     { id: "staff", description: "Discord Staff", icon: "5e74e9b61934fc1f67c65515d1f7e60d", link: "https://discord.com/company" },
@@ -62,5 +75,10 @@ export const discordBadges: DiscordBadgeSeed[] = [
     { id: "bot_commands", description: "Prend en charge les commandes", icon: "6f9e37f9029ff57aef81db857890005e", link: "https://discord.com/blog/welcome-to-the-new-era-of-discord-apps?ref=badge" },
     { id: "automod", description: "Utilise AutoMod", icon: "f2459b691ac7453ed6039bbcfaccbfcd", link: null },
     { id: "quest_completed", description: "A terminé une quête", icon: "7d9ae358c8c5e118768335dbe68b4fb8", link: "https://discord.com/settings/inventory" },
-    { id: "gifting", description: "Champion des cadeaux", icon: "8b7792c4f65953d3ff564f23429cb79e", link: null },
+    ...giftingTiers.map(([tier, label, gifts, icon]) => ({
+        id: `gifting_${tier}`,
+        description: `Cadeaux : ${label} (${gifts} cadeau${gifts > 1 ? "x" : ""} offert${gifts > 1 ? "s" : ""})`,
+        icon,
+        link: "https://discord.com/shop",
+    })),
 ];

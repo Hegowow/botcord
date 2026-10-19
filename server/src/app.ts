@@ -86,6 +86,31 @@ export function createApp (options: AppOptions) {
     const clientLimiter = rateLimiter(30, 60_000);
     const failedAuthLimiter = rateLimiter(20, 15 * 60_000);
     const kahocordIconPath = path.join(options.assetsDir, "kahocord-badge.png");
+    const eventStreams = new Set<ServerResponse>();
+    const maxEventStreams = 5000;
+
+    store.onChange(revision => {
+        const payload = `event: state\ndata: ${JSON.stringify({ revision })}\n\n`;
+        for (const stream of eventStreams) stream.write(payload);
+    });
+
+    const heartbeat = setInterval(() => {
+        for (const stream of eventStreams) stream.write(": ping\n\n");
+    }, 25_000);
+    heartbeat.unref();
+
+    function openEventStream (req: IncomingMessage, res: ServerResponse) {
+        if (eventStreams.size >= maxEventStreams) throw new HttpError(503, "Trop de connexions");
+        res.writeHead(200, {
+            "Content-Type": "text/event-stream; charset=utf-8",
+            "Cache-Control": "no-cache, no-transform",
+            Connection: "keep-alive",
+            "X-Accel-Buffering": "no",
+        });
+        res.write(`retry: 5000\nevent: state\ndata: ${JSON.stringify({ revision: store.revision })}\n\n`);
+        eventStreams.add(res);
+        req.on("close", () => eventStreams.delete(res));
+    }
 
     const iconUrl = (badge: BadgeRow) =>
         badge.kind === "discord" ? `https://cdn.discordapp.com/badge-icons/${badge.icon}.png` : `${options.publicUrl}/files/badges/${badge.icon}`;
@@ -205,6 +230,8 @@ export function createApp (options: AppOptions) {
         }
 
         if (method === "GET" && url.pathname === "/v1/state") return sendJson(res, 200, state());
+
+        if (method === "GET" && url.pathname === "/v1/events") return openEventStream(req, res);
 
         if (method === "POST" && url.pathname === "/v1/clients") {
             if (req.headers["x-kahocord-client"] !== options.clientSecret) throw new HttpError(403, "Client non reconnu");

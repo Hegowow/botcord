@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
-import { discordBadges } from "./discordBadges.ts";
+import { discordBadges, renamedDiscordBadges } from "./discordBadges.ts";
 
 export type BadgeKind = "custom" | "discord" | "system";
 
@@ -77,10 +77,24 @@ export class Store {
             "INSERT INTO badges (id, kind, description, icon, link, created_at) VALUES (?, 'discord', ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET description = excluded.description, icon = excluded.icon, link = excluded.link WHERE badges.kind = 'discord'",
         );
         discordBadges.forEach((badge, index) => insert.run(`discord:${badge.id}`, badge.description, badge.icon, badge.link, index));
+        for (const [oldId, newId] of Object.entries(renamedDiscordBadges)) {
+            this.db.prepare("INSERT OR IGNORE INTO assignments (user_id, badge_id, created_at) SELECT user_id, ?, created_at FROM assignments WHERE badge_id = ?").run(`discord:${newId}`, `discord:${oldId}`);
+        }
+        const current = new Set(discordBadges.map(badge => `discord:${badge.id}`));
+        const stale = (this.db.prepare("SELECT id FROM badges WHERE kind = 'discord'").all() as unknown as { id: string; }[]).filter(row => !current.has(row.id));
+        for (const row of stale) this.db.prepare("DELETE FROM badges WHERE id = ?").run(row.id);
     }
+
+    listeners = new Set<(revision: number) => void>();
 
     touch () {
         this.revision = Math.max(Date.now(), this.revision + 1);
+        for (const listener of this.listeners) listener(this.revision);
+    }
+
+    onChange (listener: (revision: number) => void) {
+        this.listeners.add(listener);
+        return () => this.listeners.delete(listener);
     }
 
     listBadges () {

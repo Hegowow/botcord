@@ -112,3 +112,41 @@ test("revoked admin keys stop working", async () => {
     store.revokeAdminKey(id);
     assert.equal((await call("GET", "/v1/admin/session", undefined, { Authorization: `Bearer ${key}` })).status, 401);
 });
+
+test("event stream pushes a new revision when badges change", async () => {
+    const controller = new AbortController();
+    const response = await fetch(`${base}/v1/events`, { headers: { Origin: "https://discord.com" }, signal: controller.signal });
+    assert.equal(response.headers.get("content-type"), "text/event-stream; charset=utf-8");
+    assert.equal(response.headers.get("access-control-allow-origin"), "https://discord.com");
+    const reader = response.body!.getReader();
+    const decoder = new TextDecoder();
+    let received = decoder.decode((await reader.read()).value);
+    assert.match(received, /event: state/);
+    const before = store.revision;
+    await call("PUT", "/v1/admin/users/111111111111111111/badges/discord%3Astaff", undefined, admin);
+    while (!received.includes(`"revision":${store.revision}`) || store.revision === before) {
+        received += decoder.decode((await reader.read()).value);
+    }
+    assert.ok(store.revision > before);
+    controller.abort();
+});
+
+test("gifting badges expose the six Discord tiers", async () => {
+    const { json } = await call("GET", "/v1/state");
+    const ids = json.badges.map((badge: { id: string; }) => badge.id);
+    for (const tier of ["patron", "champion", "luminary", "icon", "hero", "legend"]) assert.ok(ids.includes(`discord:gifting_${tier}`), tier);
+    assert.ok(!ids.includes("discord:gifting"));
+});
+
+test("legacy gifting assignments move to the Champion tier", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "kahocord-migration-"));
+    const first = new Store(dir);
+    first.db.prepare("INSERT INTO badges (id, kind, description, icon, link, created_at) VALUES ('discord:gifting', 'discord', 'old', 'x', NULL, 0)").run();
+    first.assign("222222222222222222", "discord:gifting");
+    first.db.close();
+    const second = new Store(dir);
+    assert.deepEqual(second.assignments()["222222222222222222"], ["discord:gifting_champion"]);
+    assert.equal(second.getBadge("discord:gifting"), undefined);
+    second.db.close();
+    fs.rmSync(dir, { recursive: true, force: true });
+});
