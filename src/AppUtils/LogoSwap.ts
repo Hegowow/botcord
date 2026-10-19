@@ -428,15 +428,23 @@ function resolveFill (element: SvgElement) {
     return "currentColor";
 }
 
+function applyPathData (element: SvgElement, d: string) {
+    if (element.getAttribute("data-kahocord-original-d") === null) {
+        element.setAttribute("data-kahocord-original-d", element.getAttribute("d") || "");
+    }
+    element.setAttribute("data-kahocord-applied-d", d);
+    element.setAttribute("d", d);
+}
+
 function hideSubPaths (shape: PathShape, removed: Set<SubPath>) {
     const remaining = shape.subPaths.filter(subPath => !removed.has(subPath));
     if (remaining.length === shape.subPaths.length) return;
     if (!remaining.length) {
         shape.element.setAttribute("data-kahocord-hidden", "");
-        shape.element.setAttribute("d", "");
+        applyPathData(shape.element, "");
         return;
     }
-    shape.element.setAttribute("d", serialize(remaining));
+    applyPathData(shape.element, serialize(remaining));
 }
 
 function fitBox (image: BrandImage, box: Box, align: "center" | "start"): Box {

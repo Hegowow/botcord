@@ -11,13 +11,28 @@ function signatureOf (svg: SVGSVGElement) {
         .join("|");
 }
 
-function processSvg (svg: SVGSVGElement) {
-    if (!svg.isConnected) return;
-    const signature = signatureOf(svg);
-    if (!signature || processedSignature.get(svg) === signature) return;
+function restoreSvg (svg: SVGSVGElement) {
     svg.querySelectorAll("[data-kahocord-logo]").forEach(node => node.remove());
     svg.querySelectorAll("[data-kahocord-hidden]").forEach(node => node.removeAttribute("data-kahocord-hidden"));
     svg.querySelectorAll("[mask^='url(#kahocord-logo-']").forEach(node => node.removeAttribute("mask"));
+    svg.querySelectorAll("[data-kahocord-original-d]").forEach(node => {
+        if (node.getAttribute("d") === node.getAttribute("data-kahocord-applied-d")) {
+            node.setAttribute("d", node.getAttribute("data-kahocord-original-d") || "");
+        }
+        node.removeAttribute("data-kahocord-original-d");
+        node.removeAttribute("data-kahocord-applied-d");
+    });
+}
+
+function processSvg (svg: SVGSVGElement) {
+    if (!svg.isConnected) return;
+    const current = signatureOf(svg);
+    if (processedSignature.get(svg) === current) return;
+    restoreSvg(svg);
+    if (!signatureOf(svg)) {
+        processedSignature.set(svg, current);
+        return;
+    }
     replaceDiscordLogos(svg as unknown as SvgElement, loadBrandImages());
     processedSignature.set(svg, signatureOf(svg));
 }
