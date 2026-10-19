@@ -12,7 +12,6 @@ import {
     screen,
     session,
     shell,
-    systemPreferences,
     Tray,
 } from "electron";
 import contextMenu from "electron-context-menu";
@@ -28,6 +27,7 @@ import GlobalConfig from "./Config";
 import Constants from "./Constants";
 import { IPCEvent } from "./IPCEvents";
 import { setupIPCEvents } from "./IPCManager";
+import { setupMediaPermissions } from "./MediaPermissions";
 import messageEditor from "./MessageEditorServer";
 
 export class DiscordBotClient extends EventEmitter {
@@ -342,20 +342,7 @@ export class DiscordBotClient extends EventEmitter {
         await this.sessionPatch();
 
         this.logger.info(`Electron UserData: ${app.getPath("userData")}`);
-        if (process.platform === "darwin") {
-            this.session.setPermissionRequestHandler(async (_webContents, permission, callback, details) => {
-                let granted = true;
-                if ("mediaTypes" in details) {
-                    if (details.mediaTypes?.includes("audio")) {
-                        granted &&= await systemPreferences.askForMediaAccess("microphone");
-                    }
-                    if (details.mediaTypes?.includes("video")) {
-                        granted = false;
-                    }
-                }
-                callback(granted);
-            });
-        }
+        setupMediaPermissions(this.session, () => this.win);
         if (!app.isPackaged) this.win.webContents.openDevTools();
         this.win.webContents.setWindowOpenHandler(({ url }) => {
             this.logger.log("WindowOpenHandler", url);
