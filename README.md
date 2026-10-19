@@ -69,6 +69,7 @@ Changer de type de compte recharge l'application. Le dernier type choisi est mé
 - Vocal (hors partage d'écran)
 - Éditeur d'embeds intégré
 - Vencord intégré
+- Faux micro / casque coupé (voir ci-dessous)
 
 ---
 
@@ -104,6 +105,14 @@ sudo -u kahocord bash -c 'set -a; . /etc/kahocord-badges.env; set +a; node --dis
 sudo -u kahocord bash -c 'set -a; . /etc/kahocord-badges.env; set +a; node --disable-warning=ExperimentalWarning src/cli.ts list-keys'
 sudo -u kahocord bash -c 'set -a; . /etc/kahocord-badges.env; set +a; node --disable-warning=ExperimentalWarning src/cli.ts revoke-key <id>'
 ```
+
+## Faux micro / casque coupé
+
+Clic droit sur le bouton **micro** ou **casque** en bas à gauche → **Faux micro coupé** / **Faux casque coupé**.
+
+Une fois coché, Discord annonce à tout le monde que tu es coupé (y compris aux personnes sur le Discord officiel), alors que ton micro continue d'émettre et que tu continues d'entendre. Tes propres icônes restent normales, pour que tu saches que tu es toujours actif.
+
+Le clic gauche sur ces boutons coupe réellement le micro ou le casque, comme d'habitude. Le réglage se remet à zéro quand tu quittes l'application.
 
 ## Personnalisation
 

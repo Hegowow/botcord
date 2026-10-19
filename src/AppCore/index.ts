@@ -215,7 +215,7 @@ export class DiscordBotClient extends EventEmitter {
 
         app.userAgentFallback = app.userAgentFallback.replace(/Electron\/[\d.]+/, "");
 
-        const gotTheLock = app.requestSingleInstanceLock();
+        const gotTheLock = process.env.KAHOCORD_ALLOW_MULTI === "1" || app.requestSingleInstanceLock();
         if (!gotTheLock) {
             this.logger.debug("Second Instance detected. Quit app...");
             this.#shouldQuitApp = true;

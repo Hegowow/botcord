@@ -1,7 +1,9 @@
 import { findStoreLazy } from "@webpack";
 import { ChannelStore, Constants, FluxDispatcher, RestAPI, Toasts, UserStore } from "@webpack/common";
 
+import { isBotMode } from "./accountMode";
 import { originalSessionStorage } from "./common";
+import { reportedVoiceState } from "./fakeVoice";
 
 const GatewayConnectionStore: {
     getSocket: () => ({
@@ -65,6 +67,10 @@ export function voiceStateUpdatePatch(data: {
     flags: number;
 }, callback: (op: number, data: any) => void) {
     data.videoStreamParameters = null;
+    const reported = reportedVoiceState();
+    data.selfMute = reported.selfMute;
+    data.selfDeaf = reported.selfDeaf;
+    if (!isBotMode) return data;
     if (data.guildId) {
         if (data.guildId !== latestGuildIdVoiceConnect) {
             callback(4, {

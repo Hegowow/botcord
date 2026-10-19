@@ -1,4 +1,5 @@
 import { ChatBarButton, ChatBarButtonFactory } from "@api/ChatButtons";
+import { NavContextMenuPatchCallback } from "@api/ContextMenu";
 import { ApplicationCommandInputType, ApplicationCommandOptionType, findOption, sendBotMessage } from "@api/Commands";
 import { definePluginSettings } from "@api/Settings";
 import ErrorBoundary from "@components/ErrorBoundary";
@@ -20,6 +21,7 @@ import {
     GuildRoleStore,
     GuildStore,
     IconUtils,
+    Menu,
     MessageActions,
     NavigationRouter,
     PermissionsBits,
@@ -39,6 +41,7 @@ import { IconEmbedSvg } from "./icon.svg";
 import type { EmojiGuildData, Group, List, MemberPatch, OpItem, Ops } from "./typing/index.d.ts";
 import { accountModeState, handleAccountSwitch, isBotMode, isCredentialLoginMode, normalizeToken, rememberAccount, startupAccountMode, switchToToken } from "./utils/accountMode";
 import { buildDiscordAPIErrorMessage, originalSessionStorage, RegExToken } from "./utils/common";
+import { FakeVoiceKind, fakeVoiceLabels, fakeVoiceState, toggleFakeVoice } from "./utils/fakeVoice";
 import db from "./utils/database";
 import { hasEmbedPerms } from "./utils/fakeNitroPlugin";
 import { doIdentifyFirstPatch, handleClosePatch, handleDispatchPatch, openPrivateChannelPatch, updateGuildSubscriptionsPatch, voiceStateUpdatePatch } from "./utils/patches";
@@ -62,6 +65,26 @@ const computePermissions: (options: {
     checkElevated?: boolean ;
     excludeGuildPermissions?: boolean ;
 }) => bigint = findByCodeLazy(".getCurrentUser()", ".computeLurkerPermissionsAllowList()");
+
+const audioDeviceContextPatch: NavContextMenuPatchCallback = (children, props: { renderInputDevices?: boolean; renderOutputDevices?: boolean; }) => {
+    const kinds: FakeVoiceKind[] = [];
+    if (props?.renderInputDevices) kinds.push("mute");
+    if (props?.renderOutputDevices) kinds.push("deaf");
+    if (!kinds.length) kinds.push("mute", "deaf");
+    children.push(
+        <Menu.MenuGroup key="kahocord-fake-voice">
+            {kinds.map(kind => (
+                <Menu.MenuCheckboxItem
+                    key={kind}
+                    id={`kahocord-fake-${kind}`}
+                    label={fakeVoiceLabels[kind]}
+                    checked={fakeVoiceState[kind]}
+                    action={() => toggleFakeVoice(kind)}
+                />
+            ))}
+        </Menu.MenuGroup>,
+    );
+};
 
 let currentMessageHandler: ((event: MessageEvent) => Promise<void>) | null = null;
 
@@ -404,6 +427,9 @@ export default definePlugin({
     dependencies: ["UserSettingsAPI"],
     settings,
     required: true,
+    contextMenus: {
+        "audio-device-context": audioDeviceContextPatch,
+    },
     patches: [
         {
             find: '"username webauthn"',
@@ -437,6 +463,13 @@ export default definePlugin({
                     replace: "$1,$self.wrapMultiAccountQr($2)",
                 },
             ],
+        },
+        {
+            find: "voiceServerPing(){",
+            replacement: {
+                match: /(voiceStateUpdate\()(\w+)(\){)/,
+                replace: "$& $2 = $self.voiceStateUpdatePatch($2, this.send.bind(this));",
+            },
         },
         {
             find: '"Switching accounts"',
@@ -474,10 +507,6 @@ export default definePlugin({
                 {
                     match: /(updateGuildSubscriptions\(\w+\){)/,
                     replace: "$& return $self.updateGuildSubscriptionsPatch(arguments[0]);",
-                },
-                {
-                    match: /(voiceStateUpdate\()(\w+)(\){)/,
-                    replace: "$& $2 = $self.voiceStateUpdatePatch($2, this.send.bind(this));",
                 },
                 {
                     match: /callConnect\(((\w+,?)+)?\){/,
@@ -1378,6 +1407,8 @@ export default definePlugin({
     },
     updateGuildSubscriptionsPatch,
     voiceStateUpdatePatch,
+    fakeVoiceState,
+    toggleFakeVoice,
     handleClosePatch,
     handleDispatchPatch,
     doIdentifyFirstPatch,
