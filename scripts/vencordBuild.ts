@@ -24,13 +24,20 @@ function runCommand(cmd: string, args: string[], opts: { cwd?: string } = {}): P
     });
 }
 
+const userPlugins: [string, string][] = [
+    ["plugin", "botClient"],
+    ["badges-plugin", "kahocordBadges"],
+];
+
 function syncPlugin() {
     const root = process.cwd();
-    const userPluginDir = path.join(root, "Vencord", "src", "userplugins", "botClient");
-    rmSync(userPluginDir, { recursive: true, force: true });
-    mkdirSync(path.dirname(userPluginDir), { recursive: true });
-    cpSync(path.join(root, "plugin"), userPluginDir, { recursive: true });
-    console.log("➡️  Botcord plugin synced into Vencord.");
+    for (const [source, name] of userPlugins) {
+        const userPluginDir = path.join(root, "Vencord", "src", "userplugins", name);
+        rmSync(userPluginDir, { recursive: true, force: true });
+        mkdirSync(path.dirname(userPluginDir), { recursive: true });
+        cpSync(path.join(root, source), userPluginDir, { recursive: true });
+    }
+    console.log("➡️  KahoCord plugins synced into Vencord.");
 }
 
 async function buildVencord() {

@@ -1,0 +1,22 @@
+[Unit]
+Description=KahoCord badges server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=kahocord
+Group=kahocord
+WorkingDirectory=/opt/kahocord-badges
+EnvironmentFile=/etc/kahocord-badges.env
+ExecStart=/usr/bin/node --disable-warning=ExperimentalWarning /opt/kahocord-badges/src/index.ts
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/kahocord-badges
+
+[Install]
+WantedBy=multi-user.target

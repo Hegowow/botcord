@@ -166,12 +166,12 @@ export function handleDispatchPatch(data: any, eventName: string, n: any, receiv
         data.user.premium_type = 2;
         data.user.mfa_enabled = 1;
         data.user.purchased_flags = 3;
-        data.user.phone = "33550336";
+        data.user.phone = "0600000000";
         data.user.verified = true;
         data.user.mobile = true;
         data.user.desktop = true;
         data.user.nsfw_allowed = true;
-        data.user.email = `${data.user.id}@cyrene.moe`;
+        data.user.email = `${data.user.id}@kaho.fr`;
         data.user.age_verification_status = 3;
 
         data.sessions = [];

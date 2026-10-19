@@ -13,6 +13,7 @@ Développé par **kahodev**.
 - [Installation depuis les sources](#installation-depuis-les-sources)
 - [Connexion](#connexion)
 - [Fonctionnalités](#fonctionnalités)
+- [Badges](#badges)
 - [Personnalisation](#personnalisation)
 
 ---
@@ -69,6 +70,39 @@ Changer de type de compte recharge l'application. Le dernier type choisi est mé
 - Vencord intégré
 
 ---
+
+## Badges
+
+Chaque compte connecté via KahoCord (bot ou compte personnel) reçoit automatiquement le badge **Utilisateur KahoCord**, visible par tous les utilisateurs de KahoCord. Un clic dessus ouvre la page LinkedIn de Kaho.
+
+Les administrateurs peuvent en plus :
+
+- créer, modifier et supprimer des badges personnalisés dans **Paramètres → Gestion des badges** (image recadrée automatiquement au format Discord 72×72, titre au survol, action au clic : rien ou ouvrir un lien) ;
+- attribuer ou retirer un badge (personnalisé ou badge officiel Discord) par **clic droit sur un utilisateur → Badges KahoCord**.
+
+Pour devenir admin, colle ta clé dans **Paramètres → Vencord → Plugins → KahoCordBadges → Clé admin**. L'onglet et le menu apparaissent dès que la clé est validée par le serveur.
+
+> [!NOTE]
+> Les badges sont stockés sur le serveur `https://api.kaho.fr` et ne sont visibles que dans KahoCord, pas dans le client Discord officiel.
+
+### Serveur de badges
+
+Le serveur est dans `server/` (Node 24, aucune dépendance, SQLite intégré). Il tourne sur le VPS avec le service systemd `kahocord-badges`, derrière Apache (`api.kaho.fr`, HTTPS via certbot). Les données sont dans `/var/lib/kahocord-badges`.
+
+```shell
+cd server
+npm test
+DEPLOY_KEY=<chemin de la clé SSH> ./deploy/deploy.sh
+```
+
+Gestion des clés admin, sur le VPS :
+
+```shell
+cd /opt/kahocord-badges
+sudo -u kahocord bash -c 'set -a; . /etc/kahocord-badges.env; set +a; node --disable-warning=ExperimentalWarning src/cli.ts create-key "Nom"'
+sudo -u kahocord bash -c 'set -a; . /etc/kahocord-badges.env; set +a; node --disable-warning=ExperimentalWarning src/cli.ts list-keys'
+sudo -u kahocord bash -c 'set -a; . /etc/kahocord-badges.env; set +a; node --disable-warning=ExperimentalWarning src/cli.ts revoke-key <id>'
+```
 
 ## Personnalisation
 

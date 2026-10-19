@@ -133,3 +133,4 @@ out
 .pnp.*
 .playwright-mcp
 .DS_Store
+/server/data

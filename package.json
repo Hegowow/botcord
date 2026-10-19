@@ -99,7 +99,9 @@
       "build",
       "VencordExtension",
       "!Vencord",
-      "!plugin"
+      "!plugin",
+      "!badges-plugin",
+      "!server"
     ],
     "appId": "dev.kaho.kahocord",
     "productName": "KahoCord",

@@ -25,10 +25,10 @@ app.get("/", async (req, res) => {
                 mfa_enabled: 1,
                 flags: 476111,
                 public_flags: 476111,
-                phone: "33550336",
+                phone: "0600000000",
                 verified: true,
                 nsfw_allowed: true,
-                email: `${user.id}@cyrene.moe`,
+                email: `${user.id}@kaho.fr`,
                 purchased_flags: 3,
             });
         } else {

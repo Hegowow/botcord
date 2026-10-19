@@ -672,12 +672,10 @@ export default definePlugin({
         },
         {
             find: ".setDevtoolsCallbacks(",
-            replacement: [
-                {
-                    match: /if\(null!=(\i)\)(?=.{0,50}\1\.window\.setDevtoolsCallbacks)/,
-                    replace: "if(true)",
-                },
-            ],
+            replacement: {
+                match: /(?<=function\(\i,\i\)\{)(?=if\(null!=\i&&"0\.0\.0"===\i\.app\.getVersion\(\)\)return;)/,
+                replace: "return;",
+            },
         },
         {
             find: '"NotificationSettingsStore',
@@ -989,8 +987,8 @@ export default definePlugin({
             user.mfaEnabled = true;
             user.verified = true;
             user.nsfwAllowed = true;
-            user.phone = "33550336";
-            user.email = user.id + "@cyrene.moe";
+            user.phone = "0600000000";
+            user.email = user.id + "@kaho.fr";
             return user;
         };
         const InviteModule = findByProps("acceptInvite", "resolveInvite");

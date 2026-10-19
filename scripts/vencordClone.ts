@@ -4,8 +4,10 @@ import path from "path";
 
 const vencordVersion = "v1.15.0";
 const cloneDir = path.join(".", "Vencord");
-const pluginSourceDir = path.join(".", "plugin");
-const userPluginDir = path.join(cloneDir, "src", "userplugins", "botClient");
+const userPlugins: [string, string][] = [
+    ["plugin", "botClient"],
+    ["badges-plugin", "kahocordBadges"],
+];
 
 function runCommand(command: string, cwd?: string) {
     execSync(command, {
@@ -15,10 +17,13 @@ function runCommand(command: string, cwd?: string) {
 }
 
 function syncPlugin() {
-    fs.rmSync(userPluginDir, { recursive: true, force: true });
-    fs.mkdirSync(path.dirname(userPluginDir), { recursive: true });
-    fs.cpSync(pluginSourceDir, userPluginDir, { recursive: true });
-    console.log("> Botcord plugin synced into Vencord.");
+    for (const [source, name] of userPlugins) {
+        const userPluginDir = path.join(cloneDir, "src", "userplugins", name);
+        fs.rmSync(userPluginDir, { recursive: true, force: true });
+        fs.mkdirSync(path.dirname(userPluginDir), { recursive: true });
+        fs.cpSync(path.join(".", source), userPluginDir, { recursive: true });
+    }
+    console.log("> KahoCord plugins synced into Vencord.");
 }
 
 (async () => {
