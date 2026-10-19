@@ -1,7 +1,7 @@
 {
   "name": "kahocord",
   "productName": "KahoCord",
-  "version": "3.9.7",
+  "version": "3.9.8",
   "description": "KahoCord - connecte-toi à Discord avec le token de ton bot",
   "author": {
     "name": "kahodev",
@@ -101,7 +101,8 @@
       "!Vencord",
       "!plugin",
       "!badges-plugin",
-      "!server"
+      "!server",
+      "!mac"
     ],
     "appId": "dev.kaho.kahocord",
     "productName": "KahoCord",
@@ -116,20 +117,27 @@
             "arm64",
             "x64"
           ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
         }
       ],
       "darkModeSupport": true,
       "icon": "./assets/icon.png",
       "extendInfo": {
         "NSMicrophoneUsageDescription": "KahoCord a besoin du micro pour les appels vocaux.",
-        "com.apple.security.device.audio-input": true,
         "NSCameraUsageDescription": "KahoCord a besoin de la caméra pour les appels vidéo.",
-        "NSScreenCaptureUsageDescription": "KahoCord a besoin d'enregistrer l'écran pour le partage d'écran.",
-        "com.apple.security.device.camera": true
+        "NSScreenCaptureUsageDescription": "KahoCord a besoin d'enregistrer l'écran pour le partage d'écran."
       },
-      "identity": "-",
-      "hardenedRuntime": false,
-      "gatekeeperAssess": false
+      "identity": "ARTHUR MAXIME YOHAN RICHARD KETCHEIAN (QZ555UK8QN)",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "mac/entitlements.mac.plist",
+      "entitlementsInherit": "mac/entitlements.mac.plist"
     },
     "linux": {
       "target": [

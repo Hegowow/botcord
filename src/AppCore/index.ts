@@ -462,36 +462,13 @@ export class DiscordBotClient extends EventEmitter {
         autoUpdater.logger = scope("AutoUpdater");
         autoUpdater.disableWebInstaller = true;
 
-        autoUpdater.autoDownload = process.platform !== "darwin";
+        autoUpdater.autoDownload = true;
 
         autoUpdater.removeAllListeners();
 
         return new Promise(resolve => {
             autoUpdater.on("update-available", info => {
                 const releaseUrl = `https://github.com/${Constants.GithubRepo}/releases/tag/v${info.version}`;
-
-                if (process.platform === "darwin") {
-                    const file = info.files?.find(candidate => candidate.url.endsWith(".dmg"))?.url;
-                    const downloadUrl = file
-                        ? `https://github.com/${Constants.GithubRepo}/releases/download/v${info.version}/${file}`
-                        : releaseUrl;
-                    this
-                        .showUpdateDialog({
-                            type: "info",
-                            title: "Mise à jour disponible",
-                            message: `KahoCord ${info.version} est disponible`,
-                            detail: `Tu utilises la version ${app.getVersion()}. Télécharge la nouvelle version, ouvre le fichier .dmg et glisse KahoCord dans Applications pour remplacer l'ancienne.`,
-                            buttons: ["Télécharger", "Voir les nouveautés", "Plus tard"],
-                            defaultId: 0,
-                            cancelId: 2,
-                        })
-                        .then(({ response }) => {
-                            if (response === 0) shell.openExternal(downloadUrl);
-                            if (response === 1) shell.openExternal(releaseUrl);
-                        });
-                    resolve(true);
-                    return;
-                }
 
                 this.showNotification(
                     {
