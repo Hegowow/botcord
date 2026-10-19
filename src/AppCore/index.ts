@@ -76,7 +76,7 @@ export class DiscordBotClient extends EventEmitter {
                 type: "separator",
             },
             {
-                label: "Check for Updates...",
+                label: "Rechercher des mises à jour…",
                 type: "normal",
                 click: () => {
                     this.checkingForUpdates(true);
@@ -443,12 +443,16 @@ export class DiscordBotClient extends EventEmitter {
         }, 15000).unref();
         notif.show();
     }
+    showUpdateDialog (options: Electron.MessageBoxOptions) {
+        const parent = this.win && !this.win.isDestroyed() && this.win.isVisible() ? this.win : null;
+        return parent ? dialog.showMessageBox(parent, options) : dialog.showMessageBox(options);
+    }
     checkingForUpdates (forceEmitted = false) {
         if (!app.isPackaged) {
             if (forceEmitted) {
                 this.showNotification({
                     title: "Update Manager",
-                    body: "Auto-updates are disabled in development mode.",
+                    body: "Les mises à jour automatiques sont désactivées en mode développement.",
                     silent: false,
                 });
             }
@@ -467,24 +471,32 @@ export class DiscordBotClient extends EventEmitter {
                 const releaseUrl = `https://github.com/${Constants.GithubRepo}/releases/tag/v${info.version}`;
 
                 if (process.platform === "darwin") {
-                    this.showNotification(
-                        {
-                            title: `New version available: ${info.version}`,
-                            body: "Please download the new version manually (MacOS)",
-                            silent: false,
-                        },
-                        () => {
-                            shell.openExternal(releaseUrl);
-                        },
-                    );
+                    const file = info.files?.find(candidate => candidate.url.endsWith(".dmg"))?.url;
+                    const downloadUrl = file
+                        ? `https://github.com/${Constants.GithubRepo}/releases/download/v${info.version}/${file}`
+                        : releaseUrl;
+                    this
+                        .showUpdateDialog({
+                            type: "info",
+                            title: "Mise à jour disponible",
+                            message: `KahoCord ${info.version} est disponible`,
+                            detail: `Tu utilises la version ${app.getVersion()}. Télécharge la nouvelle version, ouvre le fichier .dmg et glisse KahoCord dans Applications pour remplacer l'ancienne.`,
+                            buttons: ["Télécharger", "Voir les nouveautés", "Plus tard"],
+                            defaultId: 0,
+                            cancelId: 2,
+                        })
+                        .then(({ response }) => {
+                            if (response === 0) shell.openExternal(downloadUrl);
+                            if (response === 1) shell.openExternal(releaseUrl);
+                        });
                     resolve(true);
                     return;
                 }
 
                 this.showNotification(
                     {
-                        title: "Update Manager",
-                        body: `A new version (${info.version}) is available and is being downloaded in the background.`,
+                        title: "Mise à jour disponible",
+                        body: `KahoCord ${info.version} est en cours de téléchargement.`,
                         silent: false,
                     },
                     () => {
@@ -493,12 +505,14 @@ export class DiscordBotClient extends EventEmitter {
                 );
             });
 
-            autoUpdater.on("update-not-available", info => {
+            autoUpdater.on("update-not-available", () => {
                 if (forceEmitted) {
-                    this.showNotification({
-                        title: "Update Manager",
-                        body: `You are using the latest version (v${app.getVersion()})`,
-                        silent: false,
+                    this.showUpdateDialog({
+                        type: "info",
+                        title: "Mises à jour",
+                        message: "KahoCord est à jour",
+                        detail: `Tu utilises la dernière version (${app.getVersion()}).`,
+                        buttons: ["OK"],
                     });
                 }
                 resolve(true);
@@ -507,16 +521,19 @@ export class DiscordBotClient extends EventEmitter {
             autoUpdater.on("error", err => {
                 this.logger.error("Error in auto-updater: " + err);
                 if (forceEmitted) {
-                    this.showNotification(
-                        {
-                            title: "Update Manager",
-                            body: `Error checking for updates: ${err.message}`,
-                            silent: false,
-                        },
-                        () => {
-                            shell.openExternal(`https://github.com/${Constants.GithubRepo}/releases`);
-                        },
-                    );
+                    this
+                        .showUpdateDialog({
+                            type: "warning",
+                            title: "Mises à jour",
+                            message: "Impossible de vérifier les mises à jour",
+                            detail: err.message,
+                            buttons: ["Voir les versions", "Fermer"],
+                            defaultId: 0,
+                            cancelId: 1,
+                        })
+                        .then(({ response }) => {
+                            if (response === 0) shell.openExternal(`https://github.com/${Constants.GithubRepo}/releases`);
+                        });
                 }
                 resolve(false);
             });
@@ -525,7 +542,7 @@ export class DiscordBotClient extends EventEmitter {
                 const percent = Math.round(progressObj.percent);
                 this.logger.debug(`Downloaded ${percent}%`);
                 if (this.tray && !this.tray.isDestroyed()) {
-                    this.tray.setToolTip(`${Constants.AppName} v${app.getVersion()} - Downloading: ${percent}%`);
+                    this.tray.setToolTip(`${Constants.AppName} v${app.getVersion()} - Téléchargement : ${percent} %`);
                 }
             });
 
@@ -534,12 +551,15 @@ export class DiscordBotClient extends EventEmitter {
                     this.tray.setToolTip(`${Constants.AppName} v${app.getVersion()}`);
                 }
 
-                dialog
-                    .showMessageBox(this.win, {
+                this
+                    .showUpdateDialog({
                         type: "info",
-                        title: "Update Ready",
-                        message: `Version ${info.version} has been downloaded. Restart the application to apply the updates?`,
-                        buttons: ["Restart", "Later"],
+                        title: "Mise à jour prête",
+                        message: `KahoCord ${info.version} est prêt à être installé`,
+                        detail: "Redémarre l'application pour appliquer la mise à jour.",
+                        buttons: ["Redémarrer", "Plus tard"],
+                        defaultId: 0,
+                        cancelId: 1,
                     })
                     .then(returnValue => {
                         if (returnValue.response === 0) autoUpdater.quitAndInstall(true, true);
