@@ -62,6 +62,14 @@ contextBridge.exposeInMainWorld("BotClientNative", {
     rememberAccountMode (userId: string, mode: "bot" | "user" | "user-login") {
         return ipcRenderer.sendSync(IPCEvent.RememberAccountMode, userId, mode);
     },
+    onScreenSharePickRequest (listener: (requestId: string, sources: unknown[], audioSupported: boolean) => void) {
+        ipcRenderer.removeAllListeners(IPCEvent.ScreenSharePickRequest);
+        ipcRenderer.on(IPCEvent.ScreenSharePickRequest, (_event, requestId, sources, audioSupported) => listener(requestId, sources, audioSupported));
+        ipcRenderer.send(IPCEvent.ScreenSharePickerReady);
+    },
+    respondScreenSharePick (requestId: string, sourceId: string | null, audio: boolean) {
+        ipcRenderer.send(IPCEvent.ScreenSharePickResponse, requestId, sourceId, audio);
+    },
     getPrivateChannelDefault () {
         return {
             type: 1,

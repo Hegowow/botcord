@@ -34,6 +34,7 @@ import {
 
 import AuthBoxMultiTokenLogin, { multiTokenState } from "./components/AuthBoxMultiTokenLogin";
 import AuthBoxTokenLogin from "./components/AuthBoxTokenLogin";
+import { startScreenSharePicker } from "./components/ScreenSharePicker";
 import { IconEmbedSvg } from "./icon.svg";
 import type { EmojiGuildData, Group, List, MemberPatch, OpItem, Ops } from "./typing/index.d.ts";
 import { accountModeState, handleAccountSwitch, isBotMode, isCredentialLoginMode, normalizeToken, rememberAccount, startupAccountMode, switchToToken } from "./utils/accountMode";
@@ -1058,6 +1059,7 @@ export default definePlugin({
         render: EditAdvancedMessageEditor,
     } : undefined,
     start() {
+        startScreenSharePicker();
         if (!isBotMode) return;
         this.dynamicPatchModules();
 

@@ -12,6 +12,9 @@ export class IPCEvent extends null {
     static SetAccountMode = "app:preload:set_account_mode";
     static GetAccountModeFor = "app:preload:get_account_mode_for";
     static RememberAccountMode = "app:preload:remember_account_mode";
+    static ScreenSharePickRequest = "app:screen_share:pick_request";
+    static ScreenSharePickResponse = "app:screen_share:pick_response";
+    static ScreenSharePickerReady = "app:screen_share:picker_ready";
     static GetExperiment = "app:preload:get_experiment";
     static GetDefaultUserPatch = "app:preload:get_default_user_patch";
     static LogFromMainProcess = "app:main:log";

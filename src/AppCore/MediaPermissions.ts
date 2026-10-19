@@ -1,8 +1,37 @@
-import { BrowserWindow, desktopCapturer, dialog, Session, systemPreferences } from "electron";
+import { randomUUID } from "crypto";
+import { BrowserWindow, desktopCapturer, DesktopCapturerSource, dialog, ipcMain, Session, systemPreferences } from "electron";
 
 import AccountMode from "./AccountMode";
+import { IPCEvent } from "./IPCEvents";
 
-const maxPickerSources = 12;
+const maxFallbackSources = 12;
+const pickerTimeoutMs = 5 * 60 * 1000;
+
+interface PickerChoice {
+    sourceId: string | null;
+    audio: boolean;
+}
+
+const pendingPicks = new Map<string, (choice: PickerChoice) => void>();
+const readyRenderers = new Set<number>();
+const trackedRenderers = new Set<number>();
+
+ipcMain.on(IPCEvent.ScreenSharePickerReady, event => {
+    const { id } = event.sender;
+    readyRenderers.add(id);
+    if (trackedRenderers.has(id)) return;
+    trackedRenderers.add(id);
+    event.sender.on("did-navigate", () => readyRenderers.delete(id));
+    event.sender.once("destroyed", () => {
+        readyRenderers.delete(id);
+        trackedRenderers.delete(id);
+    });
+});
+
+ipcMain.on(IPCEvent.ScreenSharePickResponse, (_event, requestId: string, sourceId: string | null, audio: boolean) => {
+    pendingPicks.get(requestId)?.({ sourceId, audio: audio === true });
+    pendingPicks.delete(requestId);
+});
 
 async function askMacMediaAccess (mediaTypes: string[]) {
     if (process.platform !== "darwin") return true;
@@ -12,11 +41,33 @@ async function askMacMediaAccess (mediaTypes: string[]) {
     return granted;
 }
 
-async function pickCaptureSource (window: BrowserWindow) {
-    const sources = await desktopCapturer.getSources({ types: ["screen", "window"], fetchWindowIcons: false });
-    if (!sources.length) return null;
-    if (sources.length === 1) return sources[0];
-    const choices = sources.slice(0, maxPickerSources);
+function serializeSource (source: DesktopCapturerSource) {
+    return {
+        id: source.id,
+        name: source.name,
+        isScreen: source.id.startsWith("screen:"),
+        thumbnail: source.thumbnail.isEmpty() ? null : source.thumbnail.toDataURL(),
+        icon: source.appIcon && !source.appIcon.isEmpty() ? source.appIcon.toDataURL() : null,
+    };
+}
+
+function askRenderer (window: BrowserWindow, sources: DesktopCapturerSource[], audioSupported: boolean) {
+    return new Promise<PickerChoice>(resolve => {
+        const requestId = randomUUID();
+        const timer = setTimeout(() => {
+            pendingPicks.delete(requestId);
+            resolve({ sourceId: null, audio: false });
+        }, pickerTimeoutMs);
+        pendingPicks.set(requestId, choice => {
+            clearTimeout(timer);
+            resolve(choice);
+        });
+        window.webContents.send(IPCEvent.ScreenSharePickRequest, requestId, sources.map(serializeSource), audioSupported);
+    });
+}
+
+async function askWithDialog (window: BrowserWindow, sources: DesktopCapturerSource[]): Promise<PickerChoice> {
+    const choices = sources.slice(0, maxFallbackSources);
     const { response } = await dialog.showMessageBox(window, {
         type: "question",
         title: "Partage d'écran",
@@ -25,7 +76,7 @@ async function pickCaptureSource (window: BrowserWindow) {
         cancelId: choices.length,
         defaultId: 0,
     });
-    return choices[response] ?? null;
+    return { sourceId: choices[response]?.id ?? null, audio: false };
 }
 
 export function setupMediaPermissions (session: Session, getWindow: () => BrowserWindow) {
@@ -36,20 +87,25 @@ export function setupMediaPermissions (session: Session, getWindow: () => Browse
         callback(await askMacMediaAccess(mediaTypes));
     });
 
-    session.setDisplayMediaRequestHandler(
-        async (request, callback) => {
-            if (!AccountMode.isUser) return callback({});
-            try {
-                const source = await pickCaptureSource(getWindow());
-                if (!source) return callback({});
-                callback({
-                    video: source,
-                    ...(request.audioRequested && process.platform === "win32" ? { audio: "loopback" as const } : {}),
-                });
-            } catch {
-                callback({});
-            }
-        },
-        { useSystemPicker: true },
-    );
+    session.setDisplayMediaRequestHandler(async (request, callback) => {
+        if (!AccountMode.isUser) return callback({});
+        try {
+            const window = getWindow();
+            const sources = await desktopCapturer.getSources({
+                types: ["screen", "window"],
+                thumbnailSize: { width: 480, height: 270 },
+                fetchWindowIcons: true,
+            });
+            if (!sources.length) return callback({});
+            const audioSupported = request.audioRequested && process.platform === "win32";
+            const choice = !window.webContents.isDestroyed() && readyRenderers.has(window.webContents.id)
+                ? await askRenderer(window, sources, audioSupported)
+                : await askWithDialog(window, sources);
+            const source = sources.find(candidate => candidate.id === choice.sourceId);
+            if (!source) return callback({});
+            callback({ video: source, ...(audioSupported && choice.audio ? { audio: "loopback" as const } : {}) });
+        } catch {
+            callback({});
+        }
+    });
 }
