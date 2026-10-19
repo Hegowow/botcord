@@ -126,7 +126,10 @@
         "NSCameraUsageDescription": "KahoCord a besoin de la caméra pour les appels vidéo.",
         "NSScreenCaptureUsageDescription": "KahoCord a besoin d'enregistrer l'écran pour le partage d'écran.",
         "com.apple.security.device.camera": true
-      }
+      },
+      "identity": "-",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
     },
     "linux": {
       "target": [
